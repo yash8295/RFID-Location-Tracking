@@ -3,6 +3,8 @@ var ObjectId = mongodb.ObjectId ;
 var express = require('express');
 var crypto = require('crypto');
 var bodyParser = require('body-parser');
+var Mongoose=require('mongoose');
+var mongoDB='mongodb+srv://Yash:sombxvBOXIPxrvVO@location-tracking-wynku.mongodb.net/test?retryWrites=true&w=majority';
 
 var getRandomString = function(length){
 	return crypto.randomBytes(Math.ceil(length/2))
@@ -43,7 +45,7 @@ var MongoClient = mongodb.MongoClient;
 //Connection URL
 //var url = 'mongodb://localhost:27017'; //27017 is default port
 
-var url = "mongodb+srv://Yash:sombxvBOXIPxrvVO@location-tracking-wynku.mongodb.net/test?retryWrites=true&w=majority";
+var url = "mongodb+srv://Yash:sombxvBOXIPxrvVO@location-tracking-wynku.mongodb.net/Demo_RFID";
 
 
 MongoClient.connect(url,{useNewUrlParser:true},function(err,client){

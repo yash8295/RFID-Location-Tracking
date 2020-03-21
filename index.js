@@ -207,4 +207,4 @@ app.post('/register',(req,res,next)=>{
 	
 })*/
 
-app.listen(port,()=>{console.log(`Listening on ${port}`)});
+app.listen(3000,()=>{console.log("Listening on 3000")});

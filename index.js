@@ -3,8 +3,6 @@ var ObjectId = mongodb.ObjectId ;
 var express = require('express');
 var crypto = require('crypto');
 var bodyParser = require('body-parser');
-var Mongoose=require('mongoose');
-var mongoDB='mongodb+srv://Yash:sombxvBOXIPxrvVO@location-tracking-wynku.mongodb.net/test?retryWrites=true&w=majority';
 
 var getRandomString = function(length){
 	return crypto.randomBytes(Math.ceil(length/2))

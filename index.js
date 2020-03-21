@@ -3,6 +3,10 @@ var ObjectId = mongodb.ObjectId ;
 var express = require('express');
 var crypto = require('crypto');
 var bodyParser = require('body-parser');
+var mongoose = require('mongoose');
+var mongoDB="mongodb+srv://Yash:sombxvBOXIPxrvVO@location-tracking-wynku.mongodb.net/Demo_RFID";
+mongoose.connect(mongoDB);
+var port=3000;
 
 var getRandomString = function(length){
 	return crypto.randomBytes(Math.ceil(length/2))
@@ -45,17 +49,25 @@ var MongoClient = mongodb.MongoClient;
 
 var url = "mongodb+srv://Yash:sombxvBOXIPxrvVO@location-tracking-wynku.mongodb.net/Demo_RFID";
 
+mongoose.connection.on('error',(err)=>{
+	console.log("DB Connection Error");
+});
 
-MongoClient.connect(url,{useNewUrlParser:true},function(err,client){
+mongoose.connection.on('connected',(err)=>{
+	console.log("DB connected Successfully");
+});
+var Schema=mongoose.Schema;
 
-	var db = client.db('Demo_RFID');	
-	
-	if(err)
-		console.log('Unable to connect to Mongo DB');
-	else{
-		
-		//Register
-		app.post('/register',(req,res,next)=>{
+var userSchema = Schema({
+	name: String,
+	email: String,
+	password: String,
+	salt : String
+});
+
+var userdetails=mongoose.model('userDetails',userSchema,'users');
+
+app.post('/register',(req,res,next)=>{
 			
 			var data = req.body;
 			var plain_password = data.password;
@@ -73,8 +85,7 @@ MongoClient.connect(url,{useNewUrlParser:true},function(err,client){
 					'name':name
 			}
 			
-			db.collection('users')
-			.find({'email':email}).count(function(err,number){
+			userdetails.find({'email':email}).count(function(err,number){
 				if(err)
 					console.log(err);
 				else if(number!=0)
@@ -84,11 +95,25 @@ MongoClient.connect(url,{useNewUrlParser:true},function(err,client){
 				}
 				else
 				{
-					db.collection('users')
-					.insertOne(insertJSON,function(err,data){
+					
+					var newUserDetails=new userdetails({
+						name:name,
+						email:email,
+						salt:salt,
+						password:password
+					});
+					
+					newUserDetails.save()
+					.then(savedData =>{
+						res.json('Registration Successful');
+						console.log('Registration Successful');
+					})
+					
+					/*userdetails
+					.insert(insertJSON,function(err,data){
 							res.json('Registration Successful');
 							console.log('Registration Successful');
-					})
+					})*/
 				}
 			})
 			
@@ -101,8 +126,37 @@ MongoClient.connect(url,{useNewUrlParser:true},function(err,client){
 			var email=data.email;
 			var userPassword=data.password;
 			
+			userdetails.find({email:email}).exec(function(err,updata){
+				if(err)
+					throw err;
+				if(updata.length==0)
+				{
+					res.json('Email not exists');
+					console.log('Email not exists');
+				}
+				else
+				{
+					var salt=updata[0].salt;
+					//console.log(salt);
+					//console.log(updata);
+					var encrypted_password=updata[0].password;
+					var hashed_password=checkHashPassword(userPassword,salt).passwordHash;
+					//var hashed_password=encrypted_password
+					if(hashed_password==encrypted_password)
+					{
+						res.json('Login Successful');
+						console.log('Login Successful');
+					}
+					else
+					{
+						res.json('No User Found');
+						console.log('No User Found');
+					}
+				}
+			});
+			
 			//Check Email Exists
-			db.collection('users')
+			/*userdetails
 			.find({'email':email}).count(function(err,number){
 				if(err)
 					console.log(err);
@@ -114,7 +168,7 @@ MongoClient.connect(url,{useNewUrlParser:true},function(err,client){
 				else
 				{
 					
-						db.collection('users')
+						userdetails
 						.findOne({'email':email},function(err,user){
 							var salt = user.salt;
 							var hashed_password = checkHashPassword(userPassword,salt).passwordHash;
@@ -131,14 +185,26 @@ MongoClient.connect(url,{useNewUrlParser:true},function(err,client){
 							}
 						})
 				}
-			})
+			})*/
 			
-		});
+		});	
+
+/*MongoClient.connect(url,{useNewUrlParser:true},function(err,client){
+
+	var db = client.db('Demo_RFID');	
+	
+	if(err)
+		console.log('Unable to connect to Mongo DB');
+	else{
+		
+		//Register
+		
 		
 		//Start Web Server
-		app.listen(3000,()=>{
-			console.log('Connection Successful , Running on port 3000');
+		
 		})
 	}
 	
-})
+})*/
+
+app.listen(port,()=>{console.log(`Listening on ${port}`)});

@@ -207,4 +207,4 @@ app.post('/register',(req,res,next)=>{
 	
 })*/
 
-app.listen(3000,()=>{console.log("Listening on 3000")});
+//app.listen(3000,()=>{console.log("Listening on 3000")});

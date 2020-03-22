@@ -1,29 +1,29 @@
 {
-  "name":"node_js_auth_mongodb",
-  "version":"1.0.0",
-  "description":"Login and Signup Using Nodejs.Mongo DB in Android (Practice)",
-  "main":"index.js",
+  "name": "node_js_auth_mongodb",
+  "version": "1.0.0",
+  "description": "Login and Signup Using Nodejs.Mongo DB in Android (Practice)",
+  "main": "index.js",
   "scripts": {
-    "test":"echo \"Error: no test specified\" && exit 1",
-    "start":"node index.js"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yash8295/RFID-Location-Tracking.git"
   },
-  "author":"Yash",
-  "license":"ISC",
-  "dependencies":{
-    "body-parser":"^1.19.0",
-    "crypto":"^1.0.1",
-    "express":"^4.17.1",
-    "mongoose":"^5.5.2",
-    "mongodb":"^3.5.5",
-	"cors": "^2.8.5",
+  "author": "Yash",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
     "cors-anywhere": "^0.4.1",
-	"heroku": "^7.38.1"
+    "crypto": "^1.0.1",
+    "express": "^4.17.1",
+    "heroku": "^7.38.1",
+    "mongodb": "^3.5.5",
+    "mongoose": "^5.5.2"
   },
-   "devDependencies": {
+  "devDependencies": {
     "https-localhost": "^4.4.1"
   }
 }

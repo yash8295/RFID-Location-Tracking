@@ -4,8 +4,10 @@ var express = require('express');
 var crypto = require('crypto');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
-var cors = require('cors');
-var port=8000;
+//var mongoDB = 'mongodb://localhost:27017'; //27017 is default port
+var mongoDB="mongodb+srv://Yash:4gsYRxEVyEYzabc4@cluster0-wynku.mongodb.net/test?retryWrites=true&w=majority";
+mongoose.connect(mongoDB);
+var port=3000;
 
 var getRandomString = function(length){
 	return crypto.randomBytes(Math.ceil(length/2))
@@ -37,7 +39,6 @@ function checkHashPassword(userPassword,salt){
 
 //Create Express Service
 var app = express();
-app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));
 
@@ -45,12 +46,7 @@ app.use(bodyParser.urlencoded({extended:true}));
 var MongoClient = mongodb.MongoClient;
 
 //Connection URL
-//var url = 'mongodb://localhost:27017'; //27017 is default port
-
-var url = "mongodb+srv://Yash:sombxvBOXIPxrvVO@location-tracking-wynku.mongodb.net/Demo_RFID";
-
-var mongoDB="mongodb+srv://Yash:sombxvBOXIPxrvVO@@location-tracking-wynku.mongodb.net/test?retryWrites=true&w=majority";
-mongoose.connect(url,{useNewUrlParser:true});
+var url = 'mongodb://localhost:27017'; //27017 is default port
 
 mongoose.connection.on('error',(err)=>{
 	console.log("DB Connection Error");
@@ -68,7 +64,7 @@ var userSchema = Schema({
 	salt : String
 });
 
-var users=mongoose.model('userDetails',userSchema,'users');
+var userdetails=mongoose.model('userDetails',userSchema,'users');
 
 app.post('/register',(req,res,next)=>{
 			
@@ -88,7 +84,7 @@ app.post('/register',(req,res,next)=>{
 					'name':name
 			}
 			
-			users.find({'email':email}).count(function(err,number){
+			userdetails.find({'email':email}).count(function(err,number){
 				if(err)
 					console.log(err);
 				else if(number!=0)
@@ -99,7 +95,7 @@ app.post('/register',(req,res,next)=>{
 				else
 				{
 					
-					var newUserDetails=new users({
+					var newUserDetails=new userdetails({
 						name:name,
 						email:email,
 						salt:salt,
@@ -112,7 +108,7 @@ app.post('/register',(req,res,next)=>{
 						console.log('Registration Successful');
 					})
 					
-					/*users
+					/*userdetails
 					.insert(insertJSON,function(err,data){
 							res.json('Registration Successful');
 							console.log('Registration Successful');
@@ -129,7 +125,7 @@ app.post('/register',(req,res,next)=>{
 			var email=data.email;
 			var userPassword=data.password;
 			
-			users.find({email:email}).exec(function(err,updata){
+			userdetails.find({email:email}).exec(function(err,updata){
 				if(err)
 					throw err;
 				if(updata.length==0)
@@ -159,7 +155,7 @@ app.post('/register',(req,res,next)=>{
 			});
 			
 			//Check Email Exists
-			/*users
+			/*userdetails
 			.find({'email':email}).count(function(err,number){
 				if(err)
 					console.log(err);
@@ -171,7 +167,7 @@ app.post('/register',(req,res,next)=>{
 				else
 				{
 					
-						users
+						userdetails
 						.findOne({'email':email},function(err,user){
 							var salt = user.salt;
 							var hashed_password = checkHashPassword(userPassword,salt).passwordHash;
@@ -193,7 +189,6 @@ app.post('/register',(req,res,next)=>{
 		});	
 
 /*MongoClient.connect(url,{useNewUrlParser:true},function(err,client){
-
 	var db = client.db('Demo_RFID');	
 	
 	if(err)
@@ -210,5 +205,4 @@ app.post('/register',(req,res,next)=>{
 	
 })*/
 
-//app.listen(3000,()=>{console.log("Listening on 3000")});
-app.listen(process.env.PORT || port,()=>{console.log("Listening on port "+port);});
+app.listen(port,()=>{console.log(`Listening on ${port}`)});

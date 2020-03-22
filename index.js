@@ -130,8 +130,8 @@ app.post('/register',(req,res,next)=>{
 					throw err;
 				if(updata.length==0)
 				{
-					res.json('Email not exists');
-					console.log('Email not exists');
+					res.json('No User Found');
+					console.log('No User Found');
 				}
 				else
 				{

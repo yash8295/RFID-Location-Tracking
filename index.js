@@ -4,8 +4,6 @@ var express = require('express');
 var crypto = require('crypto');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
-var mongoDB="mongodb+srv://Yash:sombxvBOXIPxrvVO@@location-tracking-wynku.mongodb.net/test?retryWrites=true&w=majority";
-mongoose.connect(mongoDB);
 var port=3000;
 
 var getRandomString = function(length){
@@ -48,6 +46,9 @@ var MongoClient = mongodb.MongoClient;
 //var url = 'mongodb://localhost:27017'; //27017 is default port
 
 var url = "mongodb+srv://Yash:sombxvBOXIPxrvVO@location-tracking-wynku.mongodb.net/Demo_RFID";
+
+var mongoDB="mongodb+srv://Yash:sombxvBOXIPxrvVO@@location-tracking-wynku.mongodb.net/test?retryWrites=true&w=majority";
+mongoose.connect(mongoDB,{useNewUrlParser:true});
 
 mongoose.connection.on('error',(err)=>{
 	console.log("DB Connection Error");

@@ -6,7 +6,7 @@ var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 //var mongoDB = 'mongodb://localhost:27017'; //27017 is default port
 var mongoDB="mongodb+srv://Yash:4gsYRxEVyEYzabc4@cluster0-wynku.mongodb.net/test?retryWrites=true&w=majority";
-mongoose.connect(mongoDB);
+mongoose.connect(mongoDB,{useNewUrlParser:true});
 var port=3000;
 
 var getRandomString = function(length){
@@ -205,4 +205,4 @@ app.post('/register',(req,res,next)=>{
 	
 })*/
 
-app.listen(port,()=>{console.log(`Listening on ${port}`)});
+app.listen(process.env.PORT || port,()=>{console.log("Listening on port "+port);});

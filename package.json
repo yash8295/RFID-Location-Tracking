@@ -7,6 +7,10 @@
     "test":"echo \"Error: no test specified\" && exit 1",
     "start":"node index.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yash8295/RFID-Location-Tracking.git"
+  },
   "author":"Yash",
   "license":"ISC",
   "dependencies":{
@@ -18,5 +22,8 @@
 	"cors": "^2.8.5",
     "cors-anywhere": "^0.4.1",
 	"heroku": "^7.38.1"
+  },
+   "devDependencies": {
+    "https-localhost": "^4.4.1"
   }
 }

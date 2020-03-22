@@ -50,7 +50,7 @@ var MongoClient = mongodb.MongoClient;
 var url = "mongodb+srv://Yash:sombxvBOXIPxrvVO@location-tracking-wynku.mongodb.net/Demo_RFID";
 
 var mongoDB="mongodb+srv://Yash:sombxvBOXIPxrvVO@@location-tracking-wynku.mongodb.net/test?retryWrites=true&w=majority";
-mongoose.connect(mongoDB,{useNewUrlParser:true});
+mongoose.connect(url,{useNewUrlParser:true});
 
 mongoose.connection.on('error',(err)=>{
 	console.log("DB Connection Error");
@@ -68,7 +68,7 @@ var userSchema = Schema({
 	salt : String
 });
 
-var userdetails=mongoose.model('userDetails',userSchema,'users');
+var users=mongoose.model('userDetails',userSchema,'users');
 
 app.post('/register',(req,res,next)=>{
 			
@@ -88,7 +88,7 @@ app.post('/register',(req,res,next)=>{
 					'name':name
 			}
 			
-			userdetails.find({'email':email}).count(function(err,number){
+			users.find({'email':email}).count(function(err,number){
 				if(err)
 					console.log(err);
 				else if(number!=0)
@@ -99,7 +99,7 @@ app.post('/register',(req,res,next)=>{
 				else
 				{
 					
-					var newUserDetails=new userdetails({
+					var newUserDetails=new users({
 						name:name,
 						email:email,
 						salt:salt,
@@ -112,7 +112,7 @@ app.post('/register',(req,res,next)=>{
 						console.log('Registration Successful');
 					})
 					
-					/*userdetails
+					/*users
 					.insert(insertJSON,function(err,data){
 							res.json('Registration Successful');
 							console.log('Registration Successful');
@@ -129,7 +129,7 @@ app.post('/register',(req,res,next)=>{
 			var email=data.email;
 			var userPassword=data.password;
 			
-			userdetails.find({email:email}).exec(function(err,updata){
+			users.find({email:email}).exec(function(err,updata){
 				if(err)
 					throw err;
 				if(updata.length==0)
@@ -159,7 +159,7 @@ app.post('/register',(req,res,next)=>{
 			});
 			
 			//Check Email Exists
-			/*userdetails
+			/*users
 			.find({'email':email}).count(function(err,number){
 				if(err)
 					console.log(err);
@@ -171,7 +171,7 @@ app.post('/register',(req,res,next)=>{
 				else
 				{
 					
-						userdetails
+						users
 						.findOne({'email':email},function(err,user){
 							var salt = user.salt;
 							var hashed_password = checkHashPassword(userPassword,salt).passwordHash;

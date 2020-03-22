@@ -4,7 +4,8 @@ var express = require('express');
 var crypto = require('crypto');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
-var port=3000;
+var cors = require('cors');
+var port=8000;
 
 var getRandomString = function(length){
 	return crypto.randomBytes(Math.ceil(length/2))
@@ -36,6 +37,7 @@ function checkHashPassword(userPassword,salt){
 
 //Create Express Service
 var app = express();
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));
 
@@ -209,3 +211,4 @@ app.post('/register',(req,res,next)=>{
 })*/
 
 //app.listen(3000,()=>{console.log("Listening on 3000")});
+app.listen(process.env.PORT || port,()=>{console.log("Listening on port "+port);});

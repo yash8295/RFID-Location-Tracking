@@ -4,7 +4,7 @@ var express = require('express');
 var crypto = require('crypto');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
-var mongoDB="mongodb+srv://Yash:sombxvBOXIPxrvVO@location-tracking-wynku.mongodb.net/Demo_RFID";
+var mongoDB="mongodb+srv://Yash:sombxvBOXIPxrvVO@@location-tracking-wynku.mongodb.net/test?retryWrites=true&w=majority";
 mongoose.connect(mongoDB);
 var port=3000;
 

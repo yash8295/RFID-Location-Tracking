@@ -4,10 +4,56 @@ var express = require('express');
 var crypto = require('crypto');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
+var nodemailer=require('nodemailer');
 //var mongoDB = 'mongodb://localhost:27017'; //27017 is default port
 var mongoDB="mongodb+srv://Yash:4gsYRxEVyEYzabc4@cluster0-wynku.mongodb.net/test?retryWrites=true&w=majority";
 mongoose.connect(mongoDB,{useNewUrlParser:true});
 var port=3000;
+
+//---------------Node Mailer----------------//
+function generateOTP()
+{
+	var digits = '0123456789'; 
+    let OTP = ''; 
+    for (let i = 0; i < 6; i++ ) { 
+        OTP += digits[Math.floor(Math.random() * 10)]; 
+    } 
+    return OTP; 
+}
+
+function sendNewUserMail(To,Name)
+{
+	var otp=generateOTP();
+	console.log(otp);
+	var mailOptions={
+		from:'togetherconnect0@gmail.com',
+		to:To,
+		subject:'<Our Name> ID Login ['+otp+']',
+		text:'Hey there '+Name+',\n You have requested to register '+To+' in <Our Name>\nVerification code- '+otp+'\n\nThis is a system generated mail. Please do not reply to this mail.\nThanks'
+	}
+	var transporter=nodemailer.createTransport({
+		service:'Gmail',
+		auth:{
+			user:'togetherconnect0@gmail.com',
+			pass:'connect123!'
+		},
+		tls:{
+			rejectUnauthorized:false
+		}
+	});
+
+	transporter.sendMail(mailOptions,function(err,info){
+		if(err)
+		{
+			console.log(err);
+			throw err;
+		}
+		else
+			console.log('Email sent '+info.response);
+	});
+}
+
+//--------------------//
 
 var getRandomString = function(length){
 	return crypto.randomBytes(Math.ceil(length/2))
@@ -46,7 +92,7 @@ app.use(bodyParser.urlencoded({extended:true}));
 var MongoClient = mongodb.MongoClient;
 
 //Connection URL
-var url = 'mongodb://localhost:27017'; //27017 is default port
+//var url = 'mongodb://localhost:27017'; //27017 is default port
 
 mongoose.connection.on('error',(err)=>{
 	console.log("DB Connection Error");
@@ -113,6 +159,8 @@ app.post('/register',(req,res,next)=>{
 							res.json('Registration Successful');
 							console.log('Registration Successful');
 					})*/
+					
+					sendNewUserMail(data.email,data.name);
 				}
 			})
 			

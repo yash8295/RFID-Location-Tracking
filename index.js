@@ -6,7 +6,7 @@ var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var nodemailer=require('nodemailer');
 //var mongoDB = 'mongodb://localhost:27017'; //27017 is default port
-var mongoDB="mongodb+srv://Yash:4gsYRxEVyEYzabc4@cluster0-wynku.mongodb.net/test?retryWrites=true&w=majority";
+var mongoDB="mongodb+srv://Yash:4gsYRxEVyEYzabc4@cluster0-wynku.mongodb.net/RFID_Demo?retryWrites=true&w=majority";
 mongoose.connect(mongoDB,{useNewUrlParser:true});
 var port=3000;
 
@@ -28,7 +28,7 @@ function sendNewUserMail(To,Name)
 	var mailOptions={
 		from:'togetherconnect0@gmail.com',
 		to:To,
-		subject:'<Our Name> ID Login ['+otp+']',
+		subject:'<Our Name> ID Login ['+otp.substring(0,3)+' '+otp.substring(3)+']',
 		text:'Hey there '+Name+',\n You have requested to register '+To+' in <Our Name>\nVerification code- '+otp+'\n\nThis is a system generated mail. Please do not reply to this mail.\nThanks'
 	}
 	var transporter=nodemailer.createTransport({
@@ -51,6 +51,7 @@ function sendNewUserMail(To,Name)
 		else
 			console.log('Email sent '+info.response);
 	});
+	return otp;
 }
 
 //--------------------//
@@ -101,16 +102,29 @@ mongoose.connection.on('error',(err)=>{
 mongoose.connection.on('connected',(err)=>{
 	console.log("DB connected Successfully");
 });
+
+//----------------Schemas--------------------//
 var Schema=mongoose.Schema;
 
 var userSchema = Schema({
 	name: String,
 	email: String,
 	password: String,
-	salt : String
+	salt : String,
+	verified : String
 });
 
+var otpSchema = Schema({
+	email : String,
+	otp : String,
+})
+
 var userdetails=mongoose.model('userDetails',userSchema,'users');
+var otpdetails = mongoose.model('otpDetails',otpSchema,'otp');
+
+//------------------------------------//
+
+//----------------------Register---------------------//
 
 app.post('/register',(req,res,next)=>{
 			
@@ -141,17 +155,19 @@ app.post('/register',(req,res,next)=>{
 				else
 				{
 					
+					var toReturn;
+					
 					var newUserDetails=new userdetails({
 						name:name,
 						email:email,
 						salt:salt,
-						password:password
+						password:password,
+						verified : '0'
 					});
 					
 					newUserDetails.save()
 					.then(savedData =>{
-						res.json('Registration Successful');
-						console.log('Registration Successful');
+						toReturn+='Registration Successful';
 					})
 					
 					/*userdetails
@@ -160,12 +176,26 @@ app.post('/register',(req,res,next)=>{
 							console.log('Registration Successful');
 					})*/
 					
-					sendNewUserMail(data.email,data.name);
+					var otp=sendNewUserMail(data.email,data.name);
+					
+					var newOtpDetails=new otpdetails({
+						email:email,
+						otp:otp,
+					});
+					newOtpDetails.save()
+					.then(savedData=>{
+						toReturn+='\nOtp Saved';
+					})
+					res.json('Registration Successful');
+					console.log('Registration Successful');
 				}
 			})
 			
 		});
+//-------------------------------------------//
 		
+//----------------------Login---------------------//		
+
 		app.post('/login',(req,res,next)=>{
 			
 			var data=req.body;
@@ -235,22 +265,58 @@ app.post('/register',(req,res,next)=>{
 			})*/
 			
 		});	
+		
+//-------------------------------------------//
 
-/*MongoClient.connect(url,{useNewUrlParser:true},function(err,client){
-	var db = client.db('Demo_RFID');	
+//--------------------Check OTP---------------------
+
+app.post('/checkOtp',function(req,res){
 	
-	if(err)
-		console.log('Unable to connect to Mongo DB');
-	else{
-		
-		//Register
-		
-		
-		//Start Web Server
-		
-		})
-	}
+	var body=req.body;
+	var email=body.email;
+	var otp=body.otp;
 	
-})*/
+	otpdetails.find({email:email,otp:otp})
+	.exec(function(err,data){
+		if(err)
+		{
+			console.log(err);
+			throw err;
+		}
+		else
+		{
+			if(data.length==0)
+			{
+				res.json('Wrong OTP');
+				console.log('Wrong OTP');
+			}
+			else
+			{
+				userdetails.update({email:email},{$set:{verified:'1'}})
+				.exec(function(err,data){
+					if(err)
+						throw err;
+					else
+					{
+						otpdetails.remove({email:email})
+						.exec(function(err,data){
+							if(err)
+								throw err;
+							else
+							{
+								res.json('OTP Verified');
+								console.log('OTP Verified');
+							}
+						})
+						
+					}
+				})
+			}
+		}
+	})
+	
+});
+
+//--------------------------------------------//
 
 app.listen(process.env.PORT || port,()=>{console.log("Listening on port "+port);});

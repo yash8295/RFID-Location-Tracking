@@ -34,8 +34,8 @@ function sendNewUserMail(To,Name)
 	var transporter=nodemailer.createTransport({
 		service:'Yandex',
 		auth:{
-			user:'togetherconnect@yandex.com',
-			pass:'connect123!'
+			user:'vikrantkumar158@yandex.com',
+			pass:'windowsvista8986761191$'
 		},
 	});
 

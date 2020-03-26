@@ -32,11 +32,16 @@ function sendNewUserMail(To,Name)
 		text:'Hey there '+Name+',\n You have requested to register '+To+' in <Our Name>\nVerification code- '+otp+'\n\nThis is a system generated mail. Please do not reply to this mail.\nThanks'
 	}
 	var transporter=nodemailer.createTransport({
-		service:'Yandex',
+		service:'gmail',
+		secure:false,
+		port:25,
 		auth:{
-			user:'vikrantkumar158@yandex.com',
-			pass:'windowsvista8986761191$'
+			user:'togetherconnect0@gmail.com',
+			pass:'connect123!'
 		},
+		tls:{
+			rejectUnauthorized:false
+		}
 	});
 
 	transporter.sendMail(mailOptions,function(err,info){

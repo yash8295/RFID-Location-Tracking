@@ -7,7 +7,7 @@ var mongoose = require('mongoose');
 var nodemailer=require('nodemailer');
 //var mongoDB = 'mongodb://localhost:27017'; //27017 is default port
 var mongoDB="mongodb+srv://Yash:4gsYRxEVyEYzabc4@cluster0-wynku.mongodb.net/RFID_Demo?retryWrites=true&w=majority";
-mongoose.connect(mongoDB,{useNewUrlParser:true});
+mongoose.connect(mongoDB,{useNewUrlParser:true,useUnifiedTopology: true});
 var port=3000;
 
 //---------------Node Mailer----------------//
@@ -32,14 +32,11 @@ function sendNewUserMail(To,Name)
 		text:'Hey there '+Name+',\n You have requested to register '+To+' in <Our Name>\nVerification code- '+otp+'\n\nThis is a system generated mail. Please do not reply to this mail.\nThanks'
 	}
 	var transporter=nodemailer.createTransport({
-		service:'Gmail',
+		service:'Yandex',
 		auth:{
-			user:'togetherconnect0@gmail.com',
+			user:'togetherconnect@yandex.com',
 			pass:'connect123!'
 		},
-		tls:{
-			rejectUnauthorized:false
-		}
 	});
 
 	transporter.sendMail(mailOptions,function(err,info){
@@ -111,7 +108,7 @@ var userSchema = Schema({
 	email: String,
 	password: String,
 	salt : String,
-	verified : String
+	verifiedOTP : String
 });
 
 var otpSchema = Schema({
@@ -162,7 +159,7 @@ app.post('/register',(req,res,next)=>{
 						email:email,
 						salt:salt,
 						password:password,
-						verified : '0'
+						verifiedOTP : '0'
 					});
 					
 					newUserDetails.save()
@@ -175,19 +172,19 @@ app.post('/register',(req,res,next)=>{
 							res.json('Registration Successful');
 							console.log('Registration Successful');
 					})*/
-					
+					var otp = 0; 
 					var otp=sendNewUserMail(data.email,data.name);
 					
-					var newOtpDetails=new otpdetails({
-						email:email,
-						otp:otp,
-					});
-					newOtpDetails.save()
-					.then(savedData=>{
-						toReturn+='\nOtp Saved';
-					})
-					res.json('Registration Successful');
-					console.log('Registration Successful');
+						var newOtpDetails=new otpdetails({
+							email:email,
+							otp:otp,
+						});
+						newOtpDetails.save()
+						.then(savedData=>{
+							toReturn+='\nOtp Saved';
+						})
+						res.json('Registration Successful');
+						console.log('Registration Successful');
 				}
 			})
 			
@@ -292,13 +289,13 @@ app.post('/checkOtp',function(req,res){
 			}
 			else
 			{
-				userdetails.update({email:email},{$set:{verified:'1'}})
+				userdetails.updateOne({email:email},{$set:{verifiedOTP:'1'}})
 				.exec(function(err,data){
 					if(err)
 						throw err;
 					else
 					{
-						otpdetails.remove({email:email})
+						otpdetails.deleteOne({email:email})
 						.exec(function(err,data){
 							if(err)
 								throw err;

@@ -5,8 +5,12 @@ var crypto = require('crypto');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var nodemailer=require('nodemailer');
+var session = require('express-session');
 //var mongoDB = 'mongodb://localhost:27017'; //27017 is default port
 var mongoDB="mongodb+srv://Yash:4gsYRxEVyEYzabc4@cluster0-wynku.mongodb.net/RFID_Demo?retryWrites=true&w=majority";
+
+//mongodb+srv://Yash:4gsYRxEVyEYzabc4@cluster0-wynku.mongodb.net/RFID_Demo?retryWrites=true&w=majority
+
 mongoose.connect(mongoDB,{useNewUrlParser:true,useUnifiedTopology: true});
 var port=3000;
 
@@ -91,6 +95,11 @@ var app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));
 
+app.use(express.urlencoded({extended: true}));
+app.use(express.json());
+
+app.use(session({secret: "aezakmihesoyam"}));
+
 //Create MongoDB Client
 var MongoClient = mongodb.MongoClient;
 
@@ -130,152 +139,170 @@ var otpdetails = mongoose.model('otpDetails',otpSchema,'otp');
 
 app.post('/register',(req,res,next)=>{
 			
-			var data = req.body;
-			var plain_password = data.password;
-			var hash_data = saltHashPassword(plain_password);
-			var password = hash_data.passwordHash;
-			var salt = hash_data.salt;
-			
-			var name = data.name;
-			var email = data.email;
-			
-			var insertJSON = {
-					'email':email,
-					'password':password,
-					'salt':salt,
-					'name':name
+		var data = req.body;
+		var plain_password = data.password;
+		var hash_data = saltHashPassword(plain_password);
+		var password = hash_data.passwordHash;
+		var salt = hash_data.salt;
+		
+		var name = data.name;
+		var email = data.email;
+		
+		var insertJSON = {
+				'email':email,
+				'password':password,
+				'salt':salt,
+				'name':name
+		}
+		
+		userdetails.find({'email':email}).count(function(err,number){
+			if(err)
+				console.log(err);
+			else if(number!=0)
+			{
+				res.json('Email already exists');
+				console.log('Email already exists');
 			}
-			
-			userdetails.find({'email':email}).count(function(err,number){
-				if(err)
-					console.log(err);
-				else if(number!=0)
-				{
-					res.json('Email already exists');
-					console.log('Email already exists');
-				}
-				else
-				{
-					
-					var toReturn;
-					
-					var newUserDetails=new userdetails({
-						name:name,
-						email:email,
-						salt:salt,
-						password:password,
-						verifiedOTP : '0'
-					});
-					
-					newUserDetails.save()
-					.then(savedData =>{
-						toReturn+='Registration Successful';
-					})
-					
-					/*userdetails
-					.insert(insertJSON,function(err,data){
-							res.json('Registration Successful');
-							console.log('Registration Successful');
-					})*/
-					var otp = 0; 
-					var otp=sendNewUserMail(data.email,data.name);
-					
-						var newOtpDetails=new otpdetails({
-							email:email,
-							otp:otp,
-						});
-						newOtpDetails.save()
-						.then(savedData=>{
-							toReturn+='\nOtp Saved';
-						})
+			else
+			{
+				
+				var toReturn;
+				
+				var newUserDetails=new userdetails({
+					name:name,
+					email:email,
+					salt:salt,
+					password:password,
+					verifiedOTP : '0'
+				});
+				
+				newUserDetails.save()
+				.then(savedData =>{
+					toReturn+='Registration Successful';
+				})
+				
+				/*userdetails
+				.insert(insertJSON,function(err,data){
 						res.json('Registration Successful');
 						console.log('Registration Successful');
-				}
-			})
-			
-		});
-//-------------------------------------------//
+				})*/
+				var otp = 0; 
+				var otp=sendNewUserMail(data.email,data.name);
+				
+					var newOtpDetails=new otpdetails({
+						email:email,
+						otp:otp,
+					});
+					newOtpDetails.save()
+					.then(savedData=>{
+						toReturn+='\nOtp Saved';
+					})
+					res.json('Registration Successful');
+					console.log('Registration Successful');
+			}
+		})
 		
+	});
+//-------------------------------------------//
+	
 //----------------------Login---------------------//		
 
-		app.post('/login',(req,res,next)=>{
-			
-			var data=req.body;
-			
-			var email=data.email;
-			var userPassword=data.password;
-			
-			userdetails.find({email:email}).exec(function(err,updata){
-				if(err)
-					throw err;
-				if(updata.length==0)
+	app.post('/login',(req,res,next)=>{
+		
+		var data=req.body;
+		
+		var email=data.email;
+		var userPassword=data.password;
+		
+		userdetails.find({email:email}).exec(function(err,updata){
+			if(err)
+				throw err;
+			if(updata.length==0)
+			{
+				res.json('No User Found');
+				console.log('No User Found');
+			}
+			else
+			{
+				var salt=updata[0].salt;
+				//console.log(salt);
+				//console.log(updata);
+				var encrypted_password=updata[0].password;
+				var hashed_password=checkHashPassword(userPassword,salt).passwordHash;
+				//var hashed_password=encrypted_password
+				if(hashed_password==encrypted_password)
+				{
+					req.session.isLogin=1;
+					req.session.name=updata[0].name;
+					req.session.email=email;
+					
+					
+					
+					res.json('Login Successful');
+					console.log('Login Successful');
+				}
+				else
 				{
 					res.json('No User Found');
 					console.log('No User Found');
 				}
-				else
-				{
-					var salt=updata[0].salt;
-					//console.log(salt);
-					//console.log(updata);
-					var encrypted_password=updata[0].password;
-					var hashed_password=checkHashPassword(userPassword,salt).passwordHash;
-					//var hashed_password=encrypted_password
-					if(hashed_password==encrypted_password)
-					{
-						res.json('Login Successful');
-						console.log('Login Successful');
-					}
-					else
-					{
-						res.json('No User Found');
-						console.log('No User Found');
-					}
-				}
-			});
-			
-			//Check Email Exists
-			/*userdetails
-			.find({'email':email}).count(function(err,number){
-				if(err)
-					console.log(err);
-				else if(number==0)
-				{
-					res.json('Email not exists');
-					console.log('Email not exists');
-				}
-				else
-				{
-					
-						userdetails
-						.findOne({'email':email},function(err,user){
-							var salt = user.salt;
-							var hashed_password = checkHashPassword(userPassword,salt).passwordHash;
-							var encrypted_password = user.password;
-							if(hashed_password==encrypted_password)
-							{
-								res.json('Login Successful');
-								console.log('Login Successful');
-							}
-							else
-							{
-								res.json('No User Found');
-								console.log('No User Found');
-							}
-						})
-				}
-			})*/
-			
-		});	
+			}
+		});
+		
+		//Check Email Exists
+		/*userdetails
+		.find({'email':email}).count(function(err,number){
+			if(err)
+				console.log(err);
+			else if(number==0)
+			{
+				res.json('Email not exists');
+				console.log('Email not exists');
+			}
+			else
+			{
+				
+					userdetails
+					.findOne({'email':email},function(err,user){
+						var salt = user.salt;
+						var hashed_password = checkHashPassword(userPassword,salt).passwordHash;
+						var encrypted_password = user.password;
+						if(hashed_password==encrypted_password)
+						{
+							res.json('Login Successful');
+							console.log('Login Successful');
+						}
+						else
+						{
+							res.json('No User Found');
+							console.log('No User Found');
+						}
+					})
+			}
+		})*/
+		
+	});	
 		
 //-------------------------------------------//
 
+//------------------Log Out---------------------//
+
+app.post('/logout',function(req,res){
+	
+	req.session.isLogin=0;
+	req.session.email='';
+	req.session.name='';
+	
+})
+
+//----------------------------------------------//
+
 //--------------------Check OTP---------------------
 
-app.post('/checkOtp',function(req,res){
+app.post('/verifyOtp',function(req,res){
 	
 	var body=req.body;
-	var email=body.email;
+	var email=req.session.email;
 	var otp=body.otp;
 	
 	otpdetails.find({email:email,otp:otp})

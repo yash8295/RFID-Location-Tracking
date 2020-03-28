@@ -6,10 +6,13 @@ var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var nodemailer=require('nodemailer');
 var session = require('express-session');
+var path=require('path');
+var ejs = require('ejs');
 //var mongoDB = 'mongodb://localhost:27017'; //27017 is default port
 var mongoDB="mongodb+srv://Yash:4gsYRxEVyEYzabc4@cluster0-wynku.mongodb.net/RFID_Demo?retryWrites=true&w=majority";
-
-//mongodb+srv://Yash:4gsYRxEVyEYzabc4@cluster0-wynku.mongodb.net/RFID_Demo?retryWrites=true&w=majority
+/*
+mongodb+srv://Yash:4gsYRxEVyEYzabc4@cluster0-wynku.mongodb.net/RFID_Demo?retryWrites=true&w=majority
+*/
 
 mongoose.connect(mongoDB,{useNewUrlParser:true,useUnifiedTopology: true});
 var port=3000;
@@ -60,7 +63,7 @@ function sendNewUserMail(To,Name)
 	return otp;
 }
 
-//--------------------//
+//-----------------------------------------------------//
 
 var getRandomString = function(length){
 	return crypto.randomBytes(Math.ceil(length/2))
@@ -90,10 +93,26 @@ function checkHashPassword(userPassword,salt){
 	return passwordData;
 }
 
+function getSecuredPassword(plain_password)
+{
+		var hash_data = saltHashPassword(plain_password);
+		var password=hash_data.passwordHash;
+		var salt=hash_data.salt;
+		return{
+			salt:salt,
+			password:password
+		};
+};
+
 //Create Express Service
 var app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));
+
+app.set('views', path.join(__dirname,'public'));
+app.set('view engine', 'ejs');
+
+app.use(express.static(path.join(__dirname,'public')));
 
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
@@ -110,12 +129,16 @@ mongoose.connection.on('error',(err)=>{
 	console.log("DB Connection Error");
 });
 
-mongoose.connection.on('connected',(err)=>{
-	console.log("DB connected Successfully");
-});
+var Schema = mongoose.Schema;
 
-//----------------Schemas--------------------//
-var Schema=mongoose.Schema;
+var adminSchema = Schema({
+	email : String,
+	name : String,
+	password : String,
+	salt : String,
+	role : String,
+	status : String
+});
 
 var userSchema = Schema({
 	name: String,
@@ -128,16 +151,140 @@ var userSchema = Schema({
 var otpSchema = Schema({
 	email : String,
 	otp : String,
-})
+	salt : String
+});
 
-var userdetails=mongoose.model('userDetails',userSchema,'users');
-var otpdetails = mongoose.model('otpDetails',otpSchema,'otp');
+var userdetails = mongoose.model('userDetails',userSchema,'usersdetails');
+var otpdetails = mongoose.model('otpDetails',otpSchema,'otpdetails');
+var admindetails = mongoose.model('adminDetails',adminSchema,'admindetails');
 
 //------------------------------------//
 
+//----------------------Website----------------------//
+
+app.get('/',function(req,res){
+	
+	req.session.isAdminLogin=0;
+	req.session.adminName='';
+	req.session.adminEmail='';
+	res.sendFile('/index.html')
+	
+});
+
+app.post('/loginAdmin',function(req,res){
+	
+	var body = req.body;
+	var email = body.email;
+	var userPassword = body.password;
+	
+	admindetails.find({email:email}).exec(function(err,data){
+		if(err)
+			throw err;
+		else
+		{
+			if(data.length==0)
+			{
+				console.log('No User Found');
+				res.send('NO');
+			}
+			else
+			{
+				var encrypted_password = data[0].password;
+				var hashed_password = checkHashPassword(userPassword,data[0].salt).passwordHash;
+				if(encrypted_password==hashed_password)
+				{
+					req.session.isAdminLogin=1;
+					req.session.adminName=data[0].name;
+					req.session.adminEmail=email;
+					req.session.role=data[0].role;
+					
+					//console.log(req.session);
+					
+					console.log('Login Successful');
+					res.send('/Admin_Profile');
+				}
+				else
+				{
+					console.log('User Not Authorised');
+					res.send('NO');
+				}
+			}
+		}
+	});
+	
+});
+
+app.post('/registerAdmin',function(req,res){
+	
+	var body = req.body;
+	var email = body.email;
+	var name = body.name;
+	var plain_password = body.password;
+	var role = body.role;
+	
+	
+	//console.log(password,salt,checkHashPassword(plain_password,salt).passwordHash);
+	admindetails.find({email:email}).exec(function(err,data){
+		if(err)
+			throw err;
+		else
+		{
+			if(data.length!=0)
+			{
+				res.send('Admin Email Already Registered');
+			}
+			else
+			{
+				var passwordData = getSecuredPassword(plain_password);
+				var password=passwordData.password;
+				var salt=passwordData.salt;
+				
+				var newAdminDetails = new admindetails({
+					name:name,
+					email:email,
+					password:password,
+					salt:salt,
+					role:role
+				});
+				
+				newAdminDetails.save()
+				.then(savedData=>{
+					res.send('Admin Registered Successfully');
+				})
+				
+			}
+		}
+	})
+	
+});
+
+app.get('/Admin_Profile',function(req,res){
+	
+	console.log(req.session);
+	
+	if(req.session.isAdminLogin==1)
+	{
+		admindetails.find({email:req.session.adminEmail}).exec(function(err,udata){
+			if(err)
+				throw err;
+			else
+			{
+				console.log('\n\n\n',udata,'\n\n\n');
+				res.render('\Admin_details',{data:udata});
+			}
+		})
+	}
+	else
+		res.redirect('/');
+	
+});
+
+//--------------------------------------------------//
+
+//----------------------App--------------------------//
 //----------------------Register---------------------//
 
-app.post('/register',(req,res,next)=>{
+app.post('/registerUser',(req,res,next)=>{
 			
 		var data = req.body;
 		var plain_password = data.password;
@@ -207,7 +354,7 @@ app.post('/register',(req,res,next)=>{
 	
 //----------------------Login---------------------//		
 
-	app.post('/login',(req,res,next)=>{
+	app.post('/loginUser',(req,res,next)=>{
 		
 		var data=req.body;
 		
@@ -232,9 +379,9 @@ app.post('/register',(req,res,next)=>{
 				//var hashed_password=encrypted_password
 				if(hashed_password==encrypted_password)
 				{
-					req.session.isLogin=1;
-					req.session.name=updata[0].name;
-					req.session.email=email;
+					req.session.isUserLogin=1;
+					req.session.userName=updata[0].name;
+					req.session.userEmail=email;
 					
 					
 					

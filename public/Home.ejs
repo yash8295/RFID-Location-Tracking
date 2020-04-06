@@ -377,13 +377,13 @@ footer {
 </div>
 </div>
 <div style="display:block;margin-bottom:15px;margin-left:-15px;margin-right:-15px;overflow:auto;">
-<span style="position:relative;display:inline-block;padding:7px 15px 0px;font-size:14px;font-weight:700;text-align:right;width:16.67%;float:left;">Phone:</span>
+<span style="position:relative;display:inline-block;padding:7px 15px 0px;font-size:14px;font-weight:700;text-align:right;width:16.67%;float:left;">Name:</span>
 <div style="width:83.33%;float:left;position: relative;min-height: 1px;padding-right: 15px;padding-left: 15px;">
 <input type="email" class="fillbox" id="emailsubx1">
 </div>
 </div>
 <div style="display:block;margin-bottom:15px;margin-left:-15px;margin-right:-15px;overflow:auto;">
-<span style="position:relative;display:inline-block;padding:7px 15px 0px;font-size:14px;font-weight:700;text-align:right;width:16.67%;float:left;">City:</span>
+<span style="position:relative;display:inline-block;padding:7px 15px 0px;font-size:14px;font-weight:700;text-align:right;width:16.67%;float:left;">Phone:</span>
 <div style="width:83.33%;float:left;position: relative;min-height: 1px;padding-right: 15px;padding-left: 15px;">
 <input type="email" class="fillbox" id="emailsubx2">
 </div>
@@ -392,8 +392,8 @@ footer {
 <span style="position:relative;display:inline-block;padding:7px 15px 0px;font-size:14px;font-weight:700;text-align:right;width:16.67%;float:left;">Status:</span>
 <div style="width:83.33%;float:left;position: relative;min-height: 1px;padding-right: 15px;padding-left: 15px;">
 <select class="fillbox" id="emailsubx3">
-<option value="Pending">Pending</option>
-<option value="Confirmed">Confirmed</option>
+<option value="Active">Active</option>
+<option value="Inactive">Inactive</option>
 </select>
 </div>
 </div>
@@ -401,9 +401,8 @@ footer {
 <span style="position:relative;display:inline-block;padding:7px 15px 0px;font-size:14px;font-weight:700;text-align:right;width:16.67%;float:left;">Status:</span>
 <div style="width:83.33%;float:left;position: relative;min-height: 1px;padding-right: 15px;padding-left: 15px;">
 <select class="fillbox" id="emailsubx4">
-<option value="User">User</option>
-<option value="Community Builder">Community Builder</option>
 <option value="Admin">Admin</option>
+<option value="SuperAdmin">SuperAdmin</option>
 </select>
 </div>
 </div>
@@ -424,7 +423,7 @@ footer {
 <div id="div1" class="d1">
 <a href="javascript:window.location.href=window.location.href">cq</a>
 <span style="cursor:pointer;top: 5px;left:30px;position:relative" id="funcnav1" onclick="funcNav()"><i class="fa fa-th-large" style="font-size:16px;"></i></span>
-<img class="img1" src="default_user.png" style="height: 40px;display: block" id="cornerimg">
+<img class="img1" src="default.png" style="height: 40px;display: block" id="cornerimg">
 <span class="sadmin" style="background-color: #5cb85c;margin-left:5px" id="log_name">Role</span>
 <span class="sadmin" style="background-color: #f0ad4e;" id='Dis_Name'>Name</span>
 </div>
@@ -432,9 +431,9 @@ footer {
 <div id="div2-wrapper">
 <div id="div2" class="d2" style="width:50px;">
 <a id="funcnav2" onclick="funcNav()"><span class="fa"><i class="fa fa-bars"></i></span>cq</a>
-<a class="anc" href="/Admin_profile"><span class="fa"><i class="fa fa-home"></i></span>Home</a>
-<a class="anc" href="/adduser"><span class="fa"><i class="fa fa-plus-square"></i></span>Add User</a>
-<a class="anc" href="/userlist"><span class="fa"><i class="fa fa-list-ul"></i></span>User List</a>
+<a class="anc" href="/Admin_Profile"><span class="fa"><i class="fa fa-home"></i></span>Home</a>
+<a class="anc" href="/addAdmin"><span class="fa"><i class="fa fa-plus-square"></i></span>Add User</a>
+<a class="anc" href="/adminList"><span class="fa"><i class="fa fa-list-ul"></i></span>User List</a>
 <a class="anc" href="/communityList"><span class="fa"><i class="fa fa-list-alt"></i></span>Community List</a>
 <a onclick="changeState()"><span class="fa"><i class="fa fa-toggle-off"></i></span>Switch As User</a>
 <a class="anc" href="/tag"><span class="fa"><i class="fa fa-tags"></i></span>Tag Panel</a>
@@ -546,7 +545,7 @@ sendreq();
 function sendreq()
 {
 	var xhr=new XMLHttpRequest();
-	xhr.open('get','/home');
+	xhr.open('post','/home');
 	xhr.send();
 	xhr.addEventListener('load',()=>{
 		var data=JSON.parse(xhr.responseText);
@@ -554,9 +553,9 @@ function sendreq()
 		console.log(data);
 		document.getElementById('Dis_Name').innerHTML=data.name;
 		document.getElementById('log_name').innerHTML=data.role;
-		document.getElementById('cornerimg').src='/image/'+data.pic_id;
+		document.getElementById('cornerimg').src=data.pic_id+'.png';
 		if(document.getElementById('user_img'))
-		document.getElementById('user_img').src='/image/'+data.pic_id;
+		document.getElementById('user_img').src=data.pic_id+'.png';
 	});
 }
 
@@ -645,7 +644,7 @@ function logOut()
 	else
 	{
 		var xhttp= new XMLHttpRequest();
-		xhttp.open("GET","/logout");
+		xhttp.open("Post","/adminLogout");
 		xhttp.send();
 		location.href="/";
 	}

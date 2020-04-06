@@ -104,6 +104,13 @@ function getSecuredPassword(plain_password)
 		};
 };
 
+function checkLogin(s)
+{
+	if(s.isAdminLogin==1)
+		return 1;
+	return 0;
+}
+
 //Create Express Service
 var app = express();
 app.use(bodyParser.json());
@@ -117,7 +124,11 @@ app.use(express.static(path.join(__dirname,'public')));
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 
-app.use(session({secret: "aezakmihesoyam"}));
+app.use(session({
+	secret: "aezakmihesoyam",
+	resave: true,
+	saveUninitialized: true
+	}));
 
 //Create MongoDB Client
 var MongoClient = mongodb.MongoClient;
@@ -137,7 +148,11 @@ var adminSchema = Schema({
 	password : String,
 	salt : String,
 	role : String,
-	status : String
+	status : String,
+	gender : String,
+	phoneno : String,
+	pic_id : String,
+	createdBy : String
 });
 
 var userSchema = Schema({
@@ -162,12 +177,14 @@ var admindetails = mongoose.model('adminDetails',adminSchema,'admindetails');
 
 //----------------------Website----------------------//
 
-app.get('/',function(req,res){
+app.get(['/',''],function(req,res){
 	
-	req.session.isAdminLogin=0;
-	req.session.adminName='';
-	req.session.adminEmail='';
-	res.sendFile('/index.html')
+	if(req.session.isAdminLogin==1)
+	{
+			res.redirect('/Admin_Profile');
+	}
+	else
+		res.sendFile('/index.html');
 	
 });
 
@@ -177,7 +194,7 @@ app.post('/loginAdmin',function(req,res){
 	var email = body.email;
 	var userPassword = body.password;
 	
-	admindetails.find({email:email}).exec(function(err,data){
+	admindetails.find({email:email,status:'Active'}).exec(function(err,data){
 		if(err)
 			throw err;
 		else
@@ -197,6 +214,7 @@ app.post('/loginAdmin',function(req,res){
 					req.session.adminName=data[0].name;
 					req.session.adminEmail=email;
 					req.session.role=data[0].role;
+					req.session.pic_id=data[0].pic_id;
 					
 					//console.log(req.session);
 					
@@ -217,10 +235,16 @@ app.post('/loginAdmin',function(req,res){
 app.post('/registerAdmin',function(req,res){
 	
 	var body = req.body;
+	//console.log(body);
 	var email = body.email;
 	var name = body.name;
 	var plain_password = body.password;
 	var role = body.role;
+	var status = 'Active';
+	var phoneno=body.phoneno;
+	var gender=body.gender;
+	var city=body.city;
+	var createdBy=req.session.adminEmail!=''?req.session.adminEmail:'Advanced Rest Client';
 	
 	
 	//console.log(password,salt,checkHashPassword(plain_password,salt).passwordHash);
@@ -231,7 +255,9 @@ app.post('/registerAdmin',function(req,res){
 		{
 			if(data.length!=0)
 			{
-				res.send('Admin Email Already Registered');
+				
+				console.log('Admin Already Registered');
+				res.send('0');
 			}
 			else
 			{
@@ -244,7 +270,12 @@ app.post('/registerAdmin',function(req,res){
 					email:email,
 					password:password,
 					salt:salt,
-					role:role
+					role:role,
+					status:status,
+					gender:gender,
+					phoneno:phoneno,
+					pic_id:'default',
+					createdBy:createdBy
 				});
 				
 				newAdminDetails.save()
@@ -262,6 +293,7 @@ app.get('/Admin_Profile',function(req,res){
 	
 	console.log(req.session);
 	
+	
 	if(req.session.isAdminLogin==1)
 	{
 		admindetails.find({email:req.session.adminEmail}).exec(function(err,udata){
@@ -278,6 +310,130 @@ app.get('/Admin_Profile',function(req,res){
 		res.redirect('/');
 	
 });
+
+app.get('/addAdmin',function(req,res){
+	
+	if(req.session.isAdminLogin==1)
+	{
+		console.log('Add User');
+		res.render('\Add_User');
+	}
+	else
+		res.redirect('/');
+	
+});
+
+app.post('/getAdmins',function(req,res){
+	
+	admindetails.find()
+	.exec(function(err,data)
+	{
+		console.log(data);
+		res.send(data);
+		
+	});
+	
+});
+
+app.get('/adminList',function(req,res){
+	
+	if(req.session.isAdminLogin==1)
+	{
+		res.render('\adminList');
+	}
+	else
+		res.redirect('/');
+	
+});
+
+app.post('/getAdminData',function(req,res){
+	
+	var tCount,fCount;
+	var size=parseInt(req.body.length);
+	var start=parseInt(req.body.start);
+	var serby=req.body.columns[parseInt(req.body.order[0].column)].name.toString();
+	var ser=req.body.search.value;
+	var sRole=req.body.role;
+	var sStatus=req.body.status;
+	admindetails.count({}).exec(function(err,totalCount)
+	{
+		if(err)
+			res.send(err);
+		tCount=totalCount;
+	});
+	var fin={email :new RegExp('^'+ser+'.*$', "i"),role : new RegExp('^'+sRole+'.*$', "i"),status : new RegExp('^'+sStatus+'.*$', "i")};
+	admindetails.count(fin).exec(function(err,totalCount)
+	{
+		if(err)
+			res.send(err);
+		fCount=totalCount;
+	});
+	if(serby=='email')
+	{	
+		var obj={'email':req.body.order[0].dir};
+	}
+	else if(serby=='phoneno')
+	{	
+		var obj={'phoneno':req.body.order[0].dir};
+	}
+	else if(serby=='name')
+	{	
+		var obj={'name':req.body.order[0].dir};
+	}
+	else if(serby=='status')
+	{	
+		var obj={'status':req.body.order[0].dir};
+	}
+	else
+	{	
+		var obj={'role':req.body.order[0].dir};
+	}
+	admindetails.find(fin).skip(start).sort(obj).limit(size).exec(function(err,data){
+		if(err)
+		{
+			res.send(err);
+		}
+		var totalPages=Math.ceil(fCount/size);
+		res.send({pageLength:size,recordsTotal:tCount,recordsFiltered:fCount,data: data});
+	});
+	
+	
+});
+
+app.put('/activation',function(req,res){
+	
+	var body=req.body;
+	var email = body.email;
+	var status=body.status;
+		admindetails.updateOne({email:email},{$set:{status:status}})
+		.exec(function(err,data){
+			if(err)
+				throw err;
+			console.log(email+' is now '+status);
+		});
+	
+});
+
+app.post('/home',function(req,res){
+	var data={name:req.session.adminName,pic_id:req.session.pic_id,role:req.session.role}
+	res.send(data);
+});
+
+app.post('/adminLogout',function(req,res){
+	
+	/*req.session.isAdminLogin=0;
+	req.session.adminEmail='';
+	req.session.adminName='';
+	req.session.role='';
+	req.session.pic_id='';*/
+	
+	req.session.destroy();
+	
+	console.log('Logout');
+	console.log(req.session);
+	
+});
+
 
 //--------------------------------------------------//
 

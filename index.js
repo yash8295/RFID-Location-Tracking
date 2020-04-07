@@ -337,11 +337,6 @@ app.post('/getAdmins',function(req,res){
 
 app.get('/adminList',function(req,res){
 	
-	for(let i=0;i<10000000000;i++)
-	{
-		
-	}
-	
 	if(req.session.isAdminLogin==1)
 	{
 		res.render('\adminList');

@@ -97,7 +97,21 @@
 </style>
 </head>
 <body>
-<% include Home %>
+
+
+<% if(role =='SuperAdmin'){ %>
+<%	include Home %>
+<% } %>
+<% if(role =='SAdmin'){ %>
+<%	include Home1 %>
+<% } %>
+<% if(role =='Admin'){ %>
+<%	include Home2 %>
+<% } %>
+<% if(role =='Country'){ %>
+<%	include Country %>
+<% } %>
+
 <div id="pmain">
 <div id="main">
 	<div class="d0">
@@ -117,7 +131,7 @@
 				Gender
 			</div>
 			<div class="d12">
-				<%= data[0].email %>
+				<%= data[0].gender %>
 			</div>
 		</div>
 	</div>
@@ -132,10 +146,10 @@
 	</div>
 	<div class="d20">
 		<div class="d11">
-			City
+			Role
 		</div>
 		<div class="d12">
-			<%= data[0].email %>
+			<%= data[0].role %>
 		</div>
 	</div>
 	</div>
@@ -145,7 +159,7 @@
 			Phone
 		</div>
 		<div class="d12">
-			<%= data[0].email %>
+			<%= data[0].phoneno %>
 		</div>
 	</div>
 	</div>

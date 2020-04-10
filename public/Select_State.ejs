@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title><Our Name></title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+
+<style>
+	*{
+	box-sizing: border-box;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 14px;
+	}
+	
+	#pmain{
+		position: fixed;
+		left:50px;
+		right:0;
+		top:60px;
+		bottom:0;
+		margin: auto;
+		overflow: auto;
+	}
+	*{
+	box-sizing: border-box;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 14px;
+	}
+	
+	#pmain{
+		position: fixed;
+		left:50px;
+		right:0;
+		top:60px;
+		bottom:0;
+		margin: auto;
+		overflow: auto;
+	}
+	
+	#main
+	{
+		position : fixed;
+		left:50vw;
+		top:10vw;
+	}
+	
+	.info
+	{
+		display: block;
+		height: 34px;
+		width: 100%;
+		outline: 0;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+		background-color: #fff;	
+		color: black;
+		padding: 6px 12px;
+		font-size: 14px;
+	}
+	#input1
+	{
+		border: 0;
+		height: 30px;
+		width: 47%;
+		background-color: #5cb85c;
+		color: white;
+		font-size: 14px;
+	}
+	#input2{
+		border: 0;
+		height: 30px;
+		width: 45%;
+		background-color: #d9534f;
+		color: white;
+		font-size: 14px;
+	}
+</style>
+
+<body>
+
+<%	include Country %>
+
+
+<div id="pmain">
+	<div id="main">	
+		<form id='SelectState' onsubmit=subForm()>
+			<select id='state' class='info'>
+				<optgroup label='Select State'>
+					<% states.forEach(function(item){ %>
+						<option value='<%= item.state %>'> <%=item.state %> </option>
+					<% }) %>
+				</optgroup>
+			</select>
+			<br/>
+			<input id='input1' type='submit' value='Select State'>
+			<input id='input2' type='button' value='Cancel' onclick="location.href='/Admin_Profile';">
+			
+		</form>
+	</div>
+</div>
+
+</body>
+<script>
+
+
+	var state=document.getElementById('state');
+	
+	function subForm()
+	{
+		event.preventDefault();
+		console.log(1);
+		var xhr=new XMLHttpRequest();
+		xhr.open('Post','/StateSelected');
+		xhr.setRequestHeader('Content-Type',"application/json");
+		xhr.send(JSON.stringify({
+			state : state.value
+		}));
+		xhr.onload=function(){
+			var data=xhr.responseText;
+			if(data=='Done')
+			{
+				location.href='/addCities';
+			}
+			else
+			{
+				alert('Error');
+				location.reload();
+			}
+		}
+	}
+	
+	document.getElementsByClassName('anc')[1].classList.add('active');
+	document.getElementsByClassName('fa-server')[0].classList.add('act');
+
+</script>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title><Our Name></title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+
+<style>
+	*{
+	box-sizing: border-box;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 14px;
+	}
+	
+	#pmain{
+		position: fixed;
+		left:50px;
+		right:0;
+		top:60px;
+		bottom:0;
+		margin: auto;
+		overflow: auto;
+	}
+	
+	#main
+	{
+		position : fixed;
+		left:50vw;
+		top:10vw;
+	}
+	
+	.info
+	{
+		display: block;
+		height: 34px;
+		width: 100%;
+		outline: 0;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+		background-color: #fff;	
+		color: black;
+		padding: 6px 12px;
+		font-size: 14px;
+	}
+	#input1
+	{
+		border: 0;
+		height: 30px;
+		width: 47%;
+		background-color: #5cb85c;
+		color: white;
+		font-size: 14px;
+	}
+	#input2{
+		border: 0;
+		height: 30px;
+		width: 45%;
+		background-color: #d9534f;
+		color: white;
+		font-size: 14px;
+	}
+</style>
+
+<script>
+	console.log(<% school %>)
+</script>
+
+<body onload=foc()>
+<% if(role =='SuperAdmin'){ %>
+<%	include Home %>
+<% } %>
+<% if(role =='SAdmin'){ %>
+<%	include Home1 %>
+<% } %>
+<% if(role =='Admin'){ %>
+<%	include Home2 %>
+<% } %>
+
+<div id="pmain" style='left:50px'>
+	<div id="main">	
+		<form id='AddStudent' onsubmit=subForm()>
+			<input type='text' placeholder='Name' id='Name' required  oninput='checkName()' class='info'>
+			<br/><br/>
+			Select School :<br/>
+			<select name='School' id='School' class='info'>
+				<optgroup label='Select School'>
+					<% school.forEach(function(item){ %>
+						<option value='<%= item.code %>'> <%=item.name %> </option>
+					<% }) %>
+				</optgroup>
+			</select>
+			
+			<br/><br/>
+			Class : 
+			<select name='Class' id='Class' class='info'>
+				<optgroup label='Select Class'>
+					<option value="1" selected>I</option>
+					<option value="2" >II</option>
+					<option value="3" >III</option>
+					<option value="4" >IV</option>
+					<option value="5" >V</option>
+					<option value="6" >VI</option>
+					<option value="7" >VII</option>
+					<option value="8" >VIII</option>
+					<option value="9" >IX</option>
+					<option value="10" >X</option>
+					<option value="11" >XI</option>
+					<option value="12" >XII</option>
+				</otpgroup>
+			</select>
+			<br/><br/>
+			<input type='text' placeholder='Class Roll No' required id='rollNum' oninput=checkNum(this) class='info'>
+			<br/><br/>
+			<input type='text' placeholder='Admission No.' required id='admNum' oninput=checkNum(this) class='info'>
+			<br/><br/>
+			<input type='text' placeholder='Parent/Guardian's Contact' required id='conNum' oninput=checkNum(this) class='info'>
+			<br/><br/>
+			<input id='input1' type='submit' value='Add Student'>
+			<input id='input2' type='button' value='Cancel' onclick="location.href='/Admin_Profile';">
+		</form>
+	</div>
+</div>
+
+</body>
+<script>
+
+	function checkNum(num)
+	{
+		//var num=document.getElementById('admNum')
+	
+		//console.log(num.value);
+		var str=num.value;
+		var temp='';
+		for(let i=0;i<str.length;i++)
+		{
+			if(num.id=='conNum' && i==10)
+				break;
+			if(str[i]>='0'&&str[i]<='9')
+				temp+=str[i];
+		}
+		num.value=temp;
+	}
+	
+	var fname=document.getElementById('Name');
+	function foc()
+	{
+		fname.value='';
+		fname.focus();
+	}
+	
+	var roll=document.getElementById('rollNum');
+	var con=document.getElementById('conNum');
+	var school=document.getElementById('School');
+	var std=document.getElementById('Class');
+	var adm=document.getElementById('admNum');
+	
+	function subForm()
+	{
+		event.preventDefault();
+		if(con.value.length<10)
+		{
+			alert('Not a valid Mobile Number');
+			con.focus();
+			return ;
+		}
+		var xhr=new XMLHttpRequest();
+		xhr.open('Post','/Add_Student');
+		xhr.setRequestHeader('content-type','application/json');
+		xhr.send(JSON.stringify({
+			name:fname.value,
+			school_id:school.value,
+			std:std.value,
+			roll:roll.value,
+			contact:con.value,
+			admission_no:adm.value
+		}));
+		
+		xhr.onload=function(){		
+			var data=xhr.responseText;
+			if(data=='Done')
+			{
+				alert('Student Added Successfully');
+				location.reload();
+			}
+			else if(data=='Already Registered')
+			{
+				alert('Student Already Added');
+				location.reload();
+			}
+			else
+			{
+				alert('Error');
+				location.href='/Admin_Profile';
+			}
+		}
+	}
+	function checkName()
+	{	
+		var str=d=fname.value;
+		var str1='';
+		for(let i=0;i<=str.length;i++)
+		{
+			if(str[i]>='a'&&str[i]<='z' || str[i]==' ')
+				str1+=str[i];
+			if(str[i]>='A'&&str[i]<='Z')
+				str1+=str[i];
+		}
+		fname.value=str1;
+	}
+	
+	document.getElementsByClassName('anc')[2].classList.add('active');
+	document.getElementsByClassName('fa-plus-square')[1].classList.add('act');
+
+</script>
+</html>

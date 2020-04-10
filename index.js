@@ -104,11 +104,17 @@ function getSecuredPassword(plain_password)
 		};
 };
 
-function checkLogin(s)
+function addZeros(str)
 {
-	if(s.isAdminLogin==1)
-		return 1;
-	return 0;
+	var temp='';
+	for(let i=0;i<4-str.length;i++) 
+	{
+		temp+='0';
+	}
+	for(i=0;i<str.length;i++)
+		temp+=str[i];
+	console.log(temp);
+	return temp;
 }
 
 //Create Express Service
@@ -169,9 +175,43 @@ var otpSchema = Schema({
 	salt : String
 });
 
+var schoolSchema = Schema({
+	
+	name: String,
+	code: String,
+	added_by : String,
+	status : String
+	
+	
+});
+
+var studentSchema = Schema({
+	
+	name : String,
+	standard : String,
+	roll_no : String,
+	contact : String,
+	school_code : String,
+	admission_no : String,
+	pic_id : String,
+	added_by : String,
+	status : String
+	
+	
+});
+
+var stateSchema = Schema({
+	
+	state : String,
+	cities : [String]
+});
+
 var userdetails = mongoose.model('userDetails',userSchema,'usersdetails');
 var otpdetails = mongoose.model('otpDetails',otpSchema,'otpdetails');
 var admindetails = mongoose.model('adminDetails',adminSchema,'admindetails');
+var schooldetails = mongoose.model('schoolDetails',schoolSchema,'schooldetails');
+var studentdetails = mongoose.model('studentDetails',studentSchema,'studentdetails');
+var statedetails = mongoose.model('stateDetails',stateSchema,'statedetails');
 
 //------------------------------------//
 
@@ -234,58 +274,65 @@ app.post('/loginAdmin',function(req,res){
 
 app.post('/registerAdmin',function(req,res){
 	
-	var body = req.body;
-	//console.log(body);
-	var email = body.email;
-	var name = body.name;
-	var plain_password = body.password;
-	var role = body.role;
-	var status = 'Active';
-	var phoneno=body.phoneno;
-	var gender=body.gender;
-	var city=body.city;
-	var createdBy=req.session.adminEmail!=''?req.session.adminEmail:'Advanced Rest Client';
-	
-	
-	//console.log(password,salt,checkHashPassword(plain_password,salt).passwordHash);
-	admindetails.find({email:email}).exec(function(err,data){
-		if(err)
-			throw err;
-		else
-		{
-			if(data.length!=0)
-			{
-				
-				console.log('Admin Already Registered');
-				res.send('0');
-			}
+	if(req.session.role=='SuperAdmin')
+	{
+		var body = req.body;
+		//console.log(body);
+		var email = body.email;
+		var name = body.name;
+		var plain_password = body.password;
+		var role = body.role;
+		var status = 'Active';
+		var phoneno=body.phoneno;
+		var gender=body.gender;
+		var city=body.city;
+		var createdBy=req.session.adminEmail!=''?req.session.adminEmail:'Advanced Rest Client';
+		
+		
+		//console.log(password,salt,checkHashPassword(plain_password,salt).passwordHash);
+		admindetails.find({email:email}).exec(function(err,data){
+			if(err)
+				throw err;
 			else
 			{
-				var passwordData = getSecuredPassword(plain_password);
-				var password=passwordData.password;
-				var salt=passwordData.salt;
-				
-				var newAdminDetails = new admindetails({
-					name:name,
-					email:email,
-					password:password,
-					salt:salt,
-					role:role,
-					status:status,
-					gender:gender,
-					phoneno:phoneno,
-					pic_id:'default',
-					createdBy:createdBy
-				});
-				
-				newAdminDetails.save()
-				.then(savedData=>{
-					res.send('Admin Registered Successfully');
-				})
-				
+				if(data.length!=0)
+				{
+					
+					console.log('Admin Already Registered');
+					res.send('0');
+				}
+				else
+				{
+					var passwordData = getSecuredPassword(plain_password);
+					var password=passwordData.password;
+					var salt=passwordData.salt;
+					
+					var pic_id = name[0].toUpperCase()+'.jpg';
+					
+					var newAdminDetails = new admindetails({
+						name:name,
+						email:email,
+						password:password,
+						salt:salt,
+						role:role,
+						status:status,
+						gender:gender,
+						phoneno:phoneno,
+						pic_id:pic_id,
+						createdBy:createdBy
+					});
+					
+					newAdminDetails.save()
+					.then(savedData=>{
+						res.send('Admin Registered Successfully');
+					})
+					
+				}
 			}
-		}
-	})
+		})
+	}
+	else
+		res.send('NO');
 	
 });
 
@@ -302,7 +349,7 @@ app.get('/Admin_Profile',function(req,res){
 			else
 			{
 				console.log('\n\n\n',udata,'\n\n\n');
-				res.render('\Admin_details',{data:udata});
+				res.render('\Admin_details',{data:udata,role:req.session.role});
 			}
 		})
 	}
@@ -316,7 +363,7 @@ app.get('/addAdmin',function(req,res){
 	if(req.session.isAdminLogin==1)
 	{
 		console.log('Add User');
-		res.render('\Add_User');
+		res.render('\Add_User',{role:req.session.role});
 	}
 	else
 		res.redirect('/');
@@ -325,13 +372,18 @@ app.get('/addAdmin',function(req,res){
 
 app.post('/getAdmins',function(req,res){
 	
-	admindetails.find()
-	.exec(function(err,data)
+	if(req.session.role=='SuperAdmin')
 	{
-		console.log(data);
-		res.send(data);
-		
-	});
+		admindetails.find()
+		.exec(function(err,data)
+		{
+			console.log(data);
+			res.send(data);
+			
+		});
+	}
+	else
+		res.send('You Are Authorised to use this resource');
 	
 });
 
@@ -339,7 +391,7 @@ app.get('/adminList',function(req,res){
 	
 	if(req.session.isAdminLogin==1)
 	{
-		res.render('\adminList');
+		res.render('\adminList',{role:req.session.role});
 	}
 	else
 		res.redirect('/');
@@ -402,15 +454,253 @@ app.post('/getAdminData',function(req,res){
 
 app.put('/activation',function(req,res){
 	
+	if(req.session.role=='SuperAdmin')
+	{
+		var body=req.body;
+		var email = body.email;
+		var status=body.status;
+			admindetails.updateOne({email:email},{$set:{status:status}})
+			.exec(function(err,data){
+				if(err)
+					throw err;
+				console.log(email+' is now '+status);
+			});
+	}
+	else
+		res.send('Get Out Here You Little ****');
+	
+});
+
+app.get('/SwitchAdmin',function(req,res){
+	
+	if(req.session.isAdminLogin==1)
+	{
+		if(req.session.role=='SuperAdmin')
+		{
+			req.session.role='SAdmin';
+		}
+		else if(req.session.role=='SAdmin')
+		{
+			req.session.role='SuperAdmin';
+		}
+		res.redirect('/Admin_Profile');
+	}
+	
+});
+
+app.get('/changePassword',function(req,res){
+	
+	if(req.session.isAdminLogin==1)
+	{
+		res.render('\Change_Pass',{role:req.session.role});
+	}
+	else
+		res.redirect('/');
+	
+});
+
+app.put('/changePass',function(req,res){
+	
+	
 	var body=req.body;
-	var email = body.email;
-	var status=body.status;
-		admindetails.updateOne({email:email},{$set:{status:status}})
+	var plain_password=body.oldPassword;
+	//console.log(req.session.adminEmail);
+	var new_password=body.newPassword;
+	console.log(req.body);
+	
+	admindetails.findOne({email:req.session.adminEmail})
+	.exec(function(err,data){
+		
+		if(err)
+			throw err;
+		else
+		{
+			console.log(data);
+			var encrypted_password=data.password;
+			var salt=data.salt;
+			var hashed_password = checkHashPassword(plain_password,data.salt).passwordHash;
+			if(encrypted_password==hashed_password)
+			{
+				var passwordData = getSecuredPassword(new_password);
+				var password=passwordData.password;
+				salt=passwordData.salt;
+				
+				//encrypted_password=password;
+				//hashed_password=checkHashPassword(new_password,salt).passwordHash
+				//console.log(encrypted_password,'\n\n',hashed_password,'\n\n',new_password);
+				admindetails.updateOne({email:req.session.adminEmail},{$set:{password:password,salt:salt}})
+				.exec(function(err,data){
+					if(err)
+						throw err;
+					console.log(data);
+					res.send('Password Changed');
+				});
+			}
+			else
+				res.send('NO');
+		}
+		
+	});
+	
+});
+
+app.get('/AddStudent',function(req,res){
+	
+	if(req.session.isAdminLogin==1)
+	{
+		
+		schooldetails.find({})
 		.exec(function(err,data){
 			if(err)
 				throw err;
-			console.log(email+' is now '+status);
+			else
+			{
+				console.log(data);
+				data.sort(function(a, b){
+					var nameA=a.name.toLowerCase(), nameB=b.name.toLowerCase()
+					if (nameA < nameB) //sort string ascending
+						return -1 
+					if (nameA > nameB)
+						return 1
+					return 0 //default return value (no sorting)
+				})
+				res.render('\Add_Student',{school:data,role:req.session.role});
+			}
 		});
+		
+	}
+	else
+		res.redirect('/');
+	
+	
+});
+
+app.post('/Add_Student',function(req,res){
+	
+	if(req.session.isAdminLogin==1)
+	{
+		var body=req.body;
+		console.log(body);
+		
+		var name=body.name;
+		var school_code=body.school_id;
+		var standard=body.std;
+		var roll=body.roll;
+		var contact=body.contact;
+		var admission_no=body.admission_no;
+		
+		/*name : String,
+		class : String,
+		roll_no : String,
+		contact : String,
+		school_code : String,
+		pic_id : String*/
+		
+		studentdetails.findOne({school_code:school_code,admission_no:admission_no})
+		.exec(function(err,data){
+			
+			if(err)
+				throw err;
+			else
+			{
+				if(data.length!=0)
+					res.send('Already Registered');
+				else
+				{
+					var newStudentDetails = new studentdetails({
+						name:name,
+						school_code:school_code,
+						standard:standard,
+						roll_no:roll,
+						contact:contact,
+						admission_no:admission_no,
+						pic_id:name[0].toUpperCase()+'.jpg',
+						added_by : req.session.adminEmail,
+						status : 'Active'
+					});
+					
+					newStudentDetails.save()
+					.then(savedData=>{
+						res.send('Done');
+					});
+				}
+			}
+			
+		})
+	}
+	else
+		res.send("No Data Found");
+	
+	
+});
+
+app.get('/addSchool',function(req,res){
+	
+	if(req.session.isAdminLogin==1)
+	{
+		res.render('\Add_School',{role:req.session.role});
+	}
+	else
+		res.redirect('/');
+	
+});
+
+app.post('/Add_School',function(req,res){
+	
+	if(req.session.isAdminLogin==1)
+	{
+	
+		var body=req.body;
+		console.log(body);
+		var name = body.School_Name;
+		
+		/*var newUserDetails=new userdetails({
+						name:name,
+						email:email,
+						salt:salt,
+						password:password,
+						verifiedOTP : '0'
+					});
+					
+					newUserDetails.save()
+					.then(savedData =>{
+						toReturn+='Registration Successful';
+					})*/
+		schooldetails.find({})
+		.exec(function(err,data){
+			
+			if(err)
+			{
+				throw err;
+				res.send('err');
+			}
+			else
+			{
+				//console.log(data.length);
+					var t=data.length+1;
+					t=t.toString();
+					t=addZeros(t);
+					//console.log(t);
+					var code=t;
+					
+					var newSchoolDetails = new schooldetails({
+						name : name,
+						code : code,
+						added_by: req.session.adminEmail,
+						status : 'Active'
+					});
+					
+					newSchoolDetails.save()
+			}
+			
+		});
+		
+		
+		
+		res.send('Done');
+	}
+	else
+		res.send("You Can't do this");
 	
 });
 
@@ -650,5 +940,153 @@ app.post('/verifyOtp',function(req,res){
 });
 
 //--------------------------------------------//
+
+//---------------Extras----------------------------//
+
+app.get('/selectState',function(req,res){
+	
+	if(req.session.isAdminLogin==1)
+	{
+		if(req.session.role=='Country')
+		{
+			statedetails.find({})
+			.exec((err,data)=>{
+				if(err)
+					throw err;
+				else
+				{
+					data.sort(function(a, b){
+						var nameA=a.state.toLowerCase(), nameB=b.state.toLowerCase()
+						if (nameA < nameB) //sort string ascending
+							return -1 
+						if (nameA > nameB)
+							return 1
+						return 0 //default return value (no sorting)
+					});
+					
+					res.render('\Select_State',{states:data});
+				}
+				
+			});
+		}
+		else
+			res.redirect('/');
+	}
+	else
+		res.redirect('/');
+	
+});
+
+app.post('/StateSelected',function(req,res){
+	
+	var body = req.body;
+	var state = body.state;
+	req.session.state=state;
+	if(req.session.state.length>0)
+	{
+		console.log(req.session.state);
+		res.send('Done');
+	}
+	else
+		res.send('No');
+	
+});
+
+app.get('/addCities',function(req,res){
+	
+	if(req.session.isAdminLogin==1)
+	{
+		if(req.session.role=='Country')
+		{
+				res.render('\Add_Cities',{state:req.session.state})
+		}
+		else
+			res.redirect('/');
+	}
+	else
+		res.redirect('/');
+	
+});
+
+app.post('/Add_City',function(req,res){
+	
+	var body=req.body;
+	var state=body.state;
+	var city=body.city;
+	var flag=0;
+	console.log(body);
+	
+	statedetails.findOne({state:state})
+	.exec(function(err,data){
+		
+		if(err)
+			throw err;
+		else
+		{
+			var cities=data.cities;
+			console.log(cities);
+			cities.forEach((item)=>{
+				
+				if(item.toLowerCase()==city.toLowerCase()&&flag==0)
+				{
+					flag=1;
+				}
+			});
+			if(flag==1)
+				res.send('Already Exists');
+			else
+			{
+				cities.push(city);
+				statedetails.updateOne({state:state},{$set:{cities:cities}})
+				.exec(function(err,data){
+					if(err)
+						throw err;
+					else
+					{
+						//console.log(data);;
+						res.send('Done');
+					}
+				})
+			}
+			console.log(cities);
+		}
+		
+	});
+	
+});
+
+/*app.post('/addState',(req,res)=>{
+	
+	
+	var state=req.body.state;
+	
+	statedetails.find({state:state})
+	.exec((err,data)=>{
+		if(err)
+			throw err;
+		else
+		{
+			if(data.length!=0)
+			{
+				console.log(data[0].cities);
+				res.send('State Already Added');
+			}
+			else
+			{
+				var newStateDetails = new statedetails({		
+					state:state,
+					cities:[]
+				});
+				newStateDetails.save()
+				.then(savedData=>{
+					res.send('State Added Successfully');
+				});
+			}
+		}
+	});
+});
+*/
+
+//-------------------------------------------------//
 
 app.listen(process.env.PORT || port,()=>{console.log("Listening on port "+port);});

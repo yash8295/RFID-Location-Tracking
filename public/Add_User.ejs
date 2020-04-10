@@ -122,7 +122,15 @@
 </style>
 </head>
 <body onload="getUsers()">
-<% include Home %>
+<% if(role =='SuperAdmin'){ %>
+<%	include Home %>
+<% } %>
+<% if(role =='SAdmin'){ %>
+<%	include Home1 %>
+<% } %>
+<% if(role =='Admin'){ %>
+<%	include Home2 %>
+<% } %>
 <div id="pmain">
 <div class="alertua" id="alertdiv">
   <span class="closebtn">&times;</span>  
@@ -176,14 +184,14 @@
 <select class="info" name="role" style="width:100%">
 <optgroup label="Select User Role">
 <option value="Admin" selected>Admin</option>
-<option value="SuperAdmin">Super Admin</option>
+<option value="SuperAdmin">SuperAdmin</option>
 </optgroup>
 </select>
 <br>
 </div>
 <div  style="margin:0px 0px 15px;">
 <input id='input1' type='submit' value='Add User'>
-<input id='input2' type='button' value='Cancel' onclick="location.href='/admin/profile';">
+<input id='input2' type='button' value='Cancel' onclick="location.href='/Admin_Profile';">
 </div>
 </div>
 </form>
@@ -252,8 +260,8 @@ function subForm()
 	'password': info[2].value ,
 	'phoneno': info[3].value,
 	'city': info[4].value,
-	'gender': info[5].options[info[5].selectedIndex].text,
-	'role': info[6].options[info[6].selectedIndex].text
+	'gender': info[5].options[info[5].selectedIndex].value,
+	'role': info[6].options[info[6].selectedIndex].value
 	}));
 	request.onload=function(){
 		var data=request.responseText;

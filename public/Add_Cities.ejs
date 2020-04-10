@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title><Our Name></title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+
+<style>
+	*{
+	box-sizing: border-box;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 14px;
+	}
+	
+	#pmain{
+		position: fixed;
+		left:50px;
+		right:0;
+		top:60px;
+		bottom:0;
+		margin: auto;
+		overflow: auto;
+	}
+	*{
+	box-sizing: border-box;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 14px;
+	}
+	
+	#pmain{
+		position: fixed;
+		left:50px;
+		right:0;
+		top:60px;
+		bottom:0;
+		margin: auto;
+		overflow: auto;
+	}
+	
+	#main
+	{
+		position : fixed;
+		left:50vw;
+		top:10vw;
+	}
+	
+	.info
+	{
+		display: block;
+		height: 34px;
+		width: 100%;
+		outline: 0;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+		background-color: #fff;	
+		color: black;
+		padding: 6px 12px;
+		font-size: 14px;
+	}
+	#input1
+	{
+		border: 0;
+		height: 30px;
+		width: 47%;
+		background-color: #5cb85c;
+		color: white;
+		font-size: 14px;
+	}
+	#input2{
+		border: 0;
+		height: 30px;
+		width: 45%;
+		background-color: #d9534f;
+		color: white;
+		font-size: 14px;
+	}
+	#input3
+	{
+		border: 0;
+		height: 30px;
+		width: 100%;
+		background-color: #008CBA;
+		color: white;
+		font-size: 14px;
+	}
+	input:read-only 
+	{
+		background-color: #ccc;
+		border: 1px solid #888;
+	}
+	input:read-only:hover
+	{
+		cursor: not-allowed;
+	}
+</style>
+
+<body onload=load()>
+
+<%	include Country %>
+
+
+<div id="pmain">
+	<div id="main">	
+		<form id='AddCity' onsubmit=subForm()>
+			State : <input type='text' value='<%= state %>' class='info' id='state' readonly>
+			<br/>
+			<a style="text-decoration:none" href='/selectState'><button class='info' type='button' id='input3'>Change State</button></a>
+			<br/><br/>
+			City : <input type='text'  class='info' id='city' required oninput=checkCity(this)>
+			<br/><br/>
+			<input id='input1' type='submit' value='Add City'>
+			<input id='input2' type='button' value='Cancel' onclick="location.href='/Admin_Profile';">
+			
+		</form>
+	</div>
+</div>
+
+</body>
+<script>
+
+
+	var state=document.getElementById('state');
+	var city=document.getElementById('city');
+	
+	function load()
+	{
+		var Temp = '<%=state%>';
+		console.log(Temp);
+		if(Temp.length<1)
+		{
+			alert('Select A State First');
+			location.href='/selectState';
+		}
+		city.value='';
+		city.focus();
+	}
+	
+	function subForm()
+	{
+		event.preventDefault();
+		console.log(1);
+		var xhr=new XMLHttpRequest();
+		xhr.open('Post','/Add_City');
+		xhr.setRequestHeader('Content-Type',"application/json");
+		xhr.send(JSON.stringify({
+			state : state.value,
+			city : city.value
+		}));
+		xhr.onload=function(){
+			var data=xhr.responseText;
+			if(data=='Done')
+			{
+				location.href='/addCities';
+			}
+			else if(data=='Already Exists')
+			{
+				alert('City Already Entered');
+				location.reload();
+			}
+			else
+			{
+				alert('Error');
+				location.reload();
+			}
+		}
+	}
+	
+	function checkCity(item)
+	{
+		var str=item.value;
+		var str1='';
+		for(let i=0;i<str.length;i++)
+		{
+			if(str[i]>='a'&&str[i]<='z')
+				str1+=str[i];
+			if(str[i]>='A'&&str[i]<='Z')
+				str1+=str[i];
+			if(str[i]==' ')
+				str1+=str[i];
+		}
+		item.value=str1;
+	}
+	
+	document.getElementsByClassName('anc')[2].classList.add('active');
+	document.getElementsByClassName('fa-plus-square')[0].classList.add('act');
+
+</script>
+</html>

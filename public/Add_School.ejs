@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title><Our Name></title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+
+<style>
+	*{
+	box-sizing: border-box;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 14px;
+	}
+	
+	#pmain{
+		position: fixed;
+		left:50px;
+		right:0;
+		top:60px;
+		bottom:0;
+		margin: auto;
+		overflow: auto;
+	}
+	*{
+	box-sizing: border-box;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 14px;
+	}
+	
+	#pmain{
+		position: fixed;
+		left:50px;
+		right:0;
+		top:60px;
+		bottom:0;
+		margin: auto;
+		overflow: auto;
+	}
+	
+	#main
+	{
+		position : fixed;
+		left:50vw;
+		top:10vw;
+	}
+	
+	.info
+	{
+		display: block;
+		height: 34px;
+		width: 100%;
+		outline: 0;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+		background-color: #fff;	
+		color: black;
+		padding: 6px 12px;
+		font-size: 14px;
+	}
+	#input1
+	{
+		border: 0;
+		height: 30px;
+		width: 47%;
+		background-color: #5cb85c;
+		color: white;
+		font-size: 14px;
+	}
+	#input2{
+		border: 0;
+		height: 30px;
+		width: 45%;
+		background-color: #d9534f;
+		color: white;
+		font-size: 14px;
+	}
+</style>
+
+<body onload='load()'>
+<% if(role =='SuperAdmin'){ %>
+<%	include Home %>
+<% } %>
+<% if(role =='SAdmin'){ %>
+<%	include Home1 %>
+<% } %>
+<% if(role =='Admin'){ %>
+<%	include Home2 %>
+<% } %>
+
+<div id="pmain" style='left:50px'>
+	<div id="main">	
+		<form id='AddStudent' onsubmit=subForm()>
+			<input type='text' placeholder='School Name' id='School' class='info'>
+			<br/><br/>
+			<input id='input1' type='submit' value='Add School'>
+			<input id='input2' type='button' value='Cancel' onclick="location.href='/Admin_Profile';">
+			
+		</form>
+	</div>
+</div>
+
+</body>
+<script>
+
+
+	var school=document.getElementById('School');
+	
+	function load()
+	{
+		school.value='';
+		school.focus();
+	}
+	
+	function subForm()
+	{
+		event.preventDefault();
+		console.log(1);
+		var xhr=new XMLHttpRequest();
+		xhr.open('Post','/Add_School');
+		xhr.setRequestHeader('Content-Type',"application/json");
+		xhr.send(JSON.stringify({
+			School_Name:school.value
+		}));
+		xhr.onload=function(){
+			var data=xhr.responseText;
+			if(data=='Done')
+			{
+				alert(school.value+' is registered');
+				
+				load();
+			}
+			else
+			{
+				alert('Error');
+				location.reload();
+			}
+		}
+	}
+	
+	document.getElementsByClassName('anc')[1].classList.add('active');
+	document.getElementsByClassName('fa-plus-square')[0].classList.add('act');
+
+</script>
+</html>

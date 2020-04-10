@@ -102,7 +102,16 @@
 </style>
 </head>
 <body>
-<% include Home %>
+<% if(role =='SuperAdmin'){ %>
+<%	include Home %>
+<% } %>
+<% if(role =='SAdmin'){ %>
+<%	include Home1 %>
+<% } %>
+<% if(role =='Admin'){ %>
+<%	include Home2 %>
+<% } %>
+
 <div id="pmain" >
 <div id="dataTable">
 <div class="FilterBar" id="UserList" style="float: left;width:101px;">Admin List</div>
@@ -166,7 +175,7 @@ $(document).ready(function(){
 						return '<center><a class="actionbtns" style="background-color:#000000;" onclick="openMail(this)"><span class="fa fa-envelope" style="color:white;font-size:12px;"></span></a></center>'
 					else
 					{
-					console.log(data);
+					//console.log(data);
 						var x='<center><a class="actionbtns" style="background-color:#000000;" onclick="openMail(this)"><span class="fa fa-envelope" style="color:white;font-size:12px;"></span></a><a class="actionbtns" style="background-color:#337AB7;" onclick="editDetails(this)"><span class="fa fa-edit" style="color:white;font-size:12px;"></span></a>'
 						if(data.status=='Active')
 							x=x+'<a class="actionbtns" style="background-color:#F0AD4E;" onclick="deAct(this)"><span class="fa fa-times-circle" style="color:white;font-size:12px;"></span></a></center>'

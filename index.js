@@ -282,6 +282,15 @@ app.post('/registerAdmin',function(req,res){
 		//console.log(body);
 		var email = body.email;
 		var name = body.name;
+		var temp='';
+		for(let i=0;i<name.length;i++)
+		{
+			if(i==0)
+				temp+=name[i].toUpperCase();
+			else
+				temp+=name[i];
+		}
+		name=temp;
 		var plain_password = body.password;
 		var role = body.role;
 		var status = 'Active';
@@ -365,7 +374,7 @@ app.get('/addAdmin',function(req,res){
 	if(req.session.isAdminLogin==1)
 	{
 		console.log('Add User');
-		res.render('\Add_User',{role:req.session.role});
+		res.render('\Add_Admin',{role:req.session.role});
 	}
 	else
 		res.redirect('/');
@@ -402,6 +411,7 @@ app.get('/adminList',function(req,res){
 
 app.post('/getAdminData',function(req,res){
 	
+	//console.log(req.body.columns);
 	var tCount,fCount;
 	var size=parseInt(req.body.length);
 	var start=parseInt(req.body.start);
@@ -451,25 +461,6 @@ app.post('/getAdminData',function(req,res){
 		res.send({pageLength:size,recordsTotal:tCount,recordsFiltered:fCount,data: data});
 	});
 	
-	
-});
-
-app.put('/activation',function(req,res){
-	
-	if(req.session.role=='SuperAdmin')
-	{
-		var body=req.body;
-		var email = body.email;
-		var status=body.status;
-			admindetails.updateOne({email:email},{$set:{status:status}})
-			.exec(function(err,data){
-				if(err)
-					throw err;
-				console.log(email+' is now '+status);
-			});
-	}
-	else
-		res.send('Get Out Here You Little ****');
 	
 });
 
@@ -762,6 +753,206 @@ app.post('/Add_School',function(req,res){
 	
 });
 
+app.get('/schoolList',function(req,res){
+	
+	if(req.session.isAdminLogin==1)
+	{
+		res.render('\schoolList',{role:req.session.role});
+	}
+	else
+		res.redirect('/');
+	
+});
+
+app.post('/getSchoolData',function(req,res){
+	
+	//console.log(req.body);
+	
+	var tCount,fCount;
+	var size=parseInt(req.body.length);
+	var start=parseInt(req.body.start);
+	var serby=req.body.columns[parseInt(req.body.order[0].column)].name.toString();
+	var ser=req.body.search.value;
+	var sStatus=req.body.status;
+	schooldetails.count({}).exec(function(err,totalCount)
+	{
+		if(err)
+			res.send(err);
+		tCount=totalCount;
+	});
+	
+	var fin={ 
+			$or:[{name :new RegExp('^'+ser+'.*$', "i")},{state :new RegExp('^'+ser+'.*$', "i")},{city :new RegExp('^'+ser+'.*$', "i")},{code :new RegExp('^'+ser+'.*$', "i")}],
+			status : new RegExp('^'+sStatus+'.*$', "i")
+		};
+		
+	schooldetails.count(fin).exec(function(err,totalCount)
+	{
+		if(err)
+			res.send(err);
+		fCount=totalCount;
+	});
+	if(serby=='code')
+	{	
+		var obj={'code':req.body.order[0].dir};
+	}
+	else if(serby=='name')
+	{	
+		var obj={'name':req.body.order[0].dir};
+	}
+	else if(serby=='state')
+	{	
+		var obj={'state':req.body.order[0].dir};
+	}
+	else if(serby=='status')
+	{	
+		var obj={'status':req.body.order[0].dir};
+	}
+	else
+	{	
+		var obj={'city':req.body.order[0].dir};
+	}
+	schooldetails.find(fin).skip(start).sort(obj).limit(size).exec(function(err,data){
+		if(err)
+		{
+			res.send(err);
+		}
+		var totalPages=Math.ceil(fCount/size);
+		res.send({pageLength:size,recordsTotal:tCount,recordsFiltered:fCount,data: data});
+	});
+	
+	
+});
+
+app.get('/studentList',function(req,res){
+	
+	if(req.session.isAdminLogin==1)
+	{
+		res.render('\studentList',{role:req.session.role});
+	}
+	else
+		res.redirect('/');
+	
+});
+
+app.post('/getStudentData',function(req,res){
+	
+	
+	var tCount,fCount;
+	var size=parseInt(req.body.length);
+	var start=parseInt(req.body.start);
+	var serby=req.body.columns[parseInt(req.body.order[0].column)].name.toString();
+	var ser=req.body.search.value;
+	var sStatus=req.body.status;
+	//console.log(req.body.columns);
+	studentdetails.count({}).exec(function(err,totalCount)
+	{
+		if(err)
+			res.send(err);
+		tCount=totalCount;
+	});
+	
+	var fin={ 
+			$or:[{name :new RegExp('^'+ser+'.*$', "i")},{school_code :new RegExp('^'+ser+'.*$', "i")},{admission_no :new RegExp('^'+ser+'.*$', "i")}],
+			status : new RegExp('^'+sStatus+'.*$', "i")
+		};
+		
+	studentdetails.count(fin).exec(function(err,totalCount)
+	{
+		if(err)
+			res.send(err);
+		fCount=totalCount;
+	});
+	if(serby=='school_code')
+	{	
+		var obj={'school_code':req.body.order[0].dir};
+	}
+	else if(serby=='name')
+	{	
+		var obj={'name':req.body.order[0].dir};
+	}
+	else if(serby=='contact')
+	{	
+		var obj={'contact':req.body.order[0].dir};
+	}
+	else if(serby=='status')
+	{	
+		var obj={'status':req.body.order[0].dir};
+	}
+	else
+	{	
+		var obj={'admission_no':req.body.order[0].dir};
+	}
+	studentdetails.find(fin).skip(start).sort(obj).limit(size).exec(function(err,data){
+		if(err)
+		{
+			res.send(err);
+		}
+		var totalPages=Math.ceil(fCount/size);
+		res.send({pageLength:size,recordsTotal:tCount,recordsFiltered:fCount,data: data});
+	});
+	
+});
+
+
+app.put('/activation',function(req,res){
+	
+	if(req.session.isAdminLogin==1)
+	{
+		var body=req.body;
+		var purpose=body.purpose.toLowerCase();
+		console.log(body);
+		
+		if(purpose=='admin')
+		{
+			console.log(body);
+			var email = body.email;
+			var status=body.status;
+				admindetails.updateOne({email:email},{$set:{status:status}})
+				.exec(function(err,data){
+					if(err)
+						throw err;
+					console.log(email+' is now '+status);
+				});
+		}
+		else if(purpose=='school')
+		{
+			var code=body.code;
+			var status=body.status;
+			
+			schooldetails.updateOne({code:code},{$set:{status:status}})
+			.exec(function(err,data)
+			{
+				if(err)
+					throw err;
+				else
+					console.log(code+' is now '+status);
+			});
+		}
+		else if(purpose=='student')
+		{
+			var school_code=body.school_code;
+			var admission_no=body.admission_no;
+			var status=body.status;
+			
+			studentdetails.updateOne({school_code:school_code,admission_no:admission_no},{$set:{status:status}})
+			.exec(function(err,data){
+				
+				if(err)
+					throw err;
+				else
+					console.log(school_code+' '+admission_no+' is now '+status);
+				
+			});
+		}
+	}
+	else
+		res.send('Get Out Here You Little ****');
+	
+});
+	
+
+
 app.post('/home',function(req,res){
 	var data={name:req.session.adminName,pic_id:req.session.pic_id,role:req.session.role}
 	res.send(data);
@@ -939,11 +1130,8 @@ app.post('/registerUser',(req,res,next)=>{
 //------------------Log Out---------------------//
 
 app.post('/logout',function(req,res){
-	
-	req.session.isLogin=0;
-	req.session.email='';
-	req.session.name='';
-	
+
+		req.session.destroy();
 })
 
 //----------------------------------------------//

@@ -316,6 +316,7 @@ footer {
 	animation-play-state: paused;
 }
 </style>
+<title>< Our Name ></title>
 <div class="alert-wrappernb">
 <div class="alertnb" id="alert1">
 	<center id="alert1Center">
@@ -550,8 +551,9 @@ function sendreq()
 	xhr.addEventListener('load',()=>{
 		var data=JSON.parse(xhr.responseText);
 		//var data=xhr.responseText;
-		console.log(data);
-		document.getElementById('Dis_Name').innerHTML=data.name;
+		//console.log(data);
+		var name=data.name.split(" ");
+		document.getElementById('Dis_Name').innerHTML=name[0];
 		document.getElementById('log_name').innerHTML=data.role;
 		document.getElementById('cornerimg').src='Images/ProfilePictures/'+data.pic_id;
 		if(document.getElementById('user_img'))

@@ -103,7 +103,9 @@
 </head>
 <body>
 <% if(role =='SuperAdmin'){ %>
-<%	include Home %>
+<script>
+	location.href='/Admin_Profile';
+</script>
 <% } %>
 <% if(role =='SAdmin'){ %>
 <%	include Home1 %>
@@ -114,12 +116,7 @@
 
 <div id="pmain" >
 <div id="dataTable">
-<div class="FilterBar" id="UserList" style="float: left;width:101px;">Admin List</div>
-<select class="FilterBar" id="roleFilter" style="float:right;margin-left:10px;width:14%;">
-<option name="user" value="">All</option>
-<option name="user" value="Admin">Admins</option>
-<option name="commuity manager" value="SuperAdmin">SuperAdmins</option>
-</select>
+<div class="FilterBar" id="UserList" style="float: left;width:104px;">School List</div>
 <select class="FilterBar" id="statusFilter" style="float:right;margin-left:10px;width:10%;">
 <option name="user" value="">All</option>
 <option name="pending" value="Active">Active</option>
@@ -131,11 +128,11 @@
 <table id="example" class="display" style="width:100%">
         <thead style="">
             <tr>
-                <th style="width:159px;border-bottom:2px solid #ddd;">Username/Email</th>
-                <th style="width:109px;border-bottom:2px solid #ddd;">Name</th>
-                <th style="width:109px;border-bottom:2px solid #ddd;">Phone</th>
-                <th style="width:70px;border-bottom:2px solid #ddd;">Status</th>
-                <th style="width:143px;border-bottom:2px solid #ddd;">Role</th>
+                <th style="width:159px;border-bottom:2px solid #ddd;">Name</th>
+                <th style="width:109px;border-bottom:2px solid #ddd;">School Code</th>
+                <th style="width:109px;border-bottom:2px solid #ddd;">Contact</th>
+                <th style="width:70px;border-bottom:2px solid #ddd;">Admission No</th>
+                <th style="width:143px;border-bottom:2px solid #ddd;">Status</th>
                 <th style="width:185px;border-bottom:2px solid #ddd;">Actions</th>
             </tr>
         </thead>
@@ -148,41 +145,36 @@
 <script type="text/javascript">
 $(document).ready(function(){
 	$('#example').DataTable({
-		aoColumnDefs : [{ 'bSortable': false, 'aTargets': [2,5] }],
+		aoColumnDefs : [{ 'bSortable': false, 'aTargets': [2,4,5] }],
 		searching : true,
 		ordering : true,
 		processing : true,
 		serverSide : true,
 		stateSave : true,
 		ajax : { 
-			url : "/getAdminData",
+			url : "/getStudentData",
 			type : "POST",
 			data : function(d){
-				d.role=$('#roleFilter').val();
 				d.status=$('#statusFilter').val();
 			}
 		},
 		columns : [
-			{ "data": "email", "name": "email" },
-			{ "data": "name", "name": "name"},
-			{ "data": "phoneno", "name": "phoneno"},
-			{ "data": "status", "name": "status" },
-			{ "data": "role", "name": "role" },
+			{ "data": "name", "name": "name" },
+			{ "data": "school_code", "name": "school_code" },
+			{ "data": "contact", "name": "contact" },
+			{ "data": "admission_no", "name": "admission_no" },
+			{ "data": "status", "name": "status"},
 			{
 				"data": null,
 				render: function(data,type,row){
-					if(data.role=="SuperAdmin")
-						return '<center><a class="actionbtns" style="background-color:#000000;" onclick="openMail(this)"><span class="fa fa-envelope" style="color:white;font-size:12px;"></span></a></center>'
-					else
-					{
+				
 					//console.log(data);
-						var x='<center><a class="actionbtns" style="background-color:#000000;" onclick="openMail(this)"><span class="fa fa-envelope" style="color:white;font-size:12px;"></span></a><a class="actionbtns" style="background-color:#337AB7;" onclick="editDetails(this)"><span class="fa fa-edit" style="color:white;font-size:12px;"></span></a>'
+						var x='<center>';
 						if(data.status=='Inactive')
 							x=x+'<a class="actionbtns" style="background-color:#F0AD4E;" onclick="deAct(this)"><span class="fa fa-times-circle" style="color:white;font-size:12px;"></span></a></center>'
 						else
 							x=x+'<a class="actionbtns" style="background-color:#5CB85C;" onclick="deAct(this)"><span class="fa fa-check-circle" style="color:white;font-size:12px;"></span></a></center>'
 						return x;
-					}
 				}
 			}
 		],
@@ -202,8 +194,8 @@ $('#statusFilter').on('change',function(){
 <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
 <script>
 var toUpdateUser;
-document.getElementsByClassName('anc')[2].classList.add('active');
-document.getElementsByClassName('fa-list-ul')[0].classList.add('act');
+document.getElementsByClassName('anc')[4].classList.add('active');
+document.getElementsByClassName('fa-list-ul')[1].classList.add('act');
 function refresh()
 {
 	location.reload();
@@ -333,9 +325,10 @@ function chStateDe()
 		xhttp.open("PUT",'/activation');
 		xhttp.setRequestHeader("Content-Type","application/json");
 		xhttp.send(JSON.stringify({
-			'email': uname.parentNode.parentNode.parentNode.cells[0].innerHTML,
+			'school_code': uname.parentNode.parentNode.parentNode.cells[1].innerHTML,
+			'admission_no' : uname.parentNode.parentNode.parentNode.cells[3].innerHTML,
 			'status': "Inactive",
-			'purpose' : 'admin'
+			'purpose': 'student'
 		}));
 		uname.childNodes[0].classList.remove('fa-check-circle');
 		uname.childNodes[0].classList.add('fa-times-circle');
@@ -343,7 +336,7 @@ function chStateDe()
 		var div6=document.getElementById('divde6');
 		div6.style.width=0;
 		div6.style.height=0;
-		document.getElementById("alert2Center").innerHTML="User "+uname.parentNode.parentNode.parentNode.cells[0].innerHTML+" deactivated";
+		document.getElementById("alert2Center").innerHTML="Student "+uname.parentNode.parentNode.parentNode.cells[0].innerHTML+" deactivated";
 		document.getElementById("alert2").style.height="60px";
 		document.getElementById("alert2").style.padding="20px";
 		setTimeout(function(){
@@ -357,9 +350,10 @@ function chStateDe()
 		xhttp.open("PUT",'/activation');
 		xhttp.setRequestHeader("Content-Type","application/json");
 		xhttp.send(JSON.stringify({
-			'email': uname.parentNode.parentNode.parentNode.cells[0].innerHTML,
+			'school_code': uname.parentNode.parentNode.parentNode.cells[1].innerHTML,
+			'admission_no' : uname.parentNode.parentNode.parentNode.cells[3].innerHTML,
 			'status': "Active",
-			'purpose' : 'admin'
+			'purpose': 'student'
 		}));
 		uname.childNodes[0].classList.remove('fa-times-circle');
 		uname.childNodes[0].classList.add('fa-check-circle');
@@ -367,7 +361,7 @@ function chStateDe()
 		var div6=document.getElementById('divac6');
 		div6.style.width=0;
 		div6.style.height=0;
-		document.getElementById("alert2Center").innerHTML="User "+uname.parentNode.parentNode.parentNode.cells[0].innerHTML+" activated";
+		document.getElementById("alert2Center").innerHTML="Student "+uname.parentNode.parentNode.parentNode.cells[0].innerHTML+" activated";
 		document.getElementById("alert2").style.height="60px";
 		document.getElementById("alert2").style.padding="20px";
 		setTimeout(function(){

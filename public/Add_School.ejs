@@ -79,7 +79,9 @@
 
 <body onload='load()'>
 <% if(role =='SuperAdmin'){ %>
-<%	include Home %>
+<script>
+	location.href='/Admin_Profile';
+</script>
 <% } %>
 <% if(role =='SAdmin'){ %>
 <%	include Home1 %>

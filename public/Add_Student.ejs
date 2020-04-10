@@ -68,7 +68,9 @@
 
 <body onload=foc()>
 <% if(role =='SuperAdmin'){ %>
-<%	include Home %>
+<script>
+	location.href='/Admin_Profile';
+</script>
 <% } %>
 <% if(role =='SAdmin'){ %>
 <%	include Home1 %>
@@ -209,7 +211,7 @@
 		fname.value=str1;
 	}
 	
-	document.getElementsByClassName('anc')[2].classList.add('active');
+	document.getElementsByClassName('anc')[3].classList.add('active');
 	document.getElementsByClassName('fa-plus-square')[1].classList.add('act');
 
 </script>

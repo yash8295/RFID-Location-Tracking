@@ -316,6 +316,7 @@ footer {
 	animation-play-state: paused;
 }
 </style>
+<title><Our Name></title>
 <div class="alert-wrappernb">
 <div class="alertnb" id="alert1">
 	<center id="alert1Center">
@@ -433,7 +434,9 @@ footer {
 <a id="funcnav2" onclick="funcNav()"><span class="fa"><i class="fa fa-bars"></i></span>cq</a>
 <a class="anc" href="/Admin_Profile"><span class="fa"><i class="fa fa-home"></i></span>Home</a>
 <a class="anc" href="/addSchool"><span class="fa"><i class="fa fa-plus-square"></i></span>Add School</a>
+<a class="anc" href="/schoolList"><span class="fa"><i class="fa fa-list-ul"></i></span>School List</a>
 <a class="anc" href="/addStudent"><span class="fa"><i class="fa fa-plus-square"></i></span>Add Student</a>
+<a class="anc" href="/studentList"><span class="fa"><i class="fa fa-list-ul"></i></span>Student List</a>
 
 <a onclick="changeState()"><span class="fa"><i class="fa fa-toggle-off"></i></span>Switch As User</a>
 <a class="anc" href="/changePassword"><span class="fa"><i class="fa fa-lock"></i></span>Change Password</a>
@@ -549,8 +552,8 @@ function sendreq()
 	xhr.addEventListener('load',()=>{
 		var data=JSON.parse(xhr.responseText);
 		//var data=xhr.responseText;
-		console.log(data);
-		document.getElementById('Dis_Name').innerHTML=data.name;
+		var name=data.name.split(" ");
+		document.getElementById('Dis_Name').innerHTML=name[0];
 		document.getElementById('log_name').innerHTML=data.role;
 		document.getElementById('cornerimg').src='Images/ProfilePictures/'+data.pic_id;
 		if(document.getElementById('user_img'))

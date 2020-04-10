@@ -67,7 +67,7 @@
 }
 </style>
 </head>
-<body>
+<body onload=load()>
 
 <% if(role =='SuperAdmin'){ %>
 <%	include Home %>
@@ -96,6 +96,11 @@
 <input class='infox' type='passowrd' required>
 <br>
 </div>
+<div style="margin-bottom:15px;">
+<p style="font-weight:bold;font-size:14px;margin-top:14px;margin-bottom:5px;">ReType New Password:</p>
+<input class='infox' type='passowrd' required>
+<br>
+</div>
 <div>
 <input id='input1' type='submit' value='Submit'>
 </div>
@@ -121,16 +126,37 @@ document.getElementsByClassName('fa-lock')[0].classList.add('act');
 <% } %>
 var input1 = document.getElementById('input1');
 var info = document.getElementsByClassName('infox');
+
+function load()
+{
+	info[0].value='';
+	info[1].value='';
+	info[2].value='';
+	info[0].focus();
+}
+
 function subForm()
 {
 	event.preventDefault();
+	if(info[1].value!=info[2].value)
+	{
+		document.getElementById("alert1Center").innerHTML="Password Do Not Match";
+			document.getElementById("alert1").style.height="60px";
+			document.getElementById("alert1").style.padding="20px";
+			setTimeout(function(){
+			document.getElementById("alert1").style.height="0px";
+			document.getElementById("alert1").style.padding="0px";
+			},2000);
+		info[1].value=info[2].value='';
+		info[1].focus();
+		return ;
+	}
 	var request=new XMLHttpRequest();
 	request.open("PUT","/changePass");
 	request.setRequestHeader("Content-Type", "application/json");
 	request.send(JSON.stringify({'oldPassword': info[0].value , 'newPassword': info[1].value}));
 	request.addEventListener('load',function(){
-		info[0].value="";
-		info[1].value="";
+		load();
 		var res=request.responseText;
 		if(res=='NO')
 		{

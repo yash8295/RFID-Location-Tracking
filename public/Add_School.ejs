@@ -93,6 +93,24 @@
 		<form id='AddStudent' onsubmit=subForm()>
 			<input type='text' placeholder='School Name' id='School' class='info'>
 			<br/><br/>
+			<input type='text' placeholder='School Code' id='School_Code' class='info' oninput=checkNum(this)>
+			<br/><br/>
+			State:
+			<select id='state' class='info' onchange=requestCities()>
+				<optgroup label='Select State'>
+					<% states.forEach(function(item){ %>
+						<option value='<%= item.state %>'><%= item.state %></option>
+					<% }) %>
+				</optgroup>
+			</select>
+			<br/><br/>
+			City:
+			<select id='city' class='info'>
+				<optgroup label='Select City' id='City_List'>
+					
+				</optgroup>
+			</select>
+			<br/><br/>
 			<input id='input1' type='submit' value='Add School'>
 			<input id='input2' type='button' value='Cancel' onclick="location.href='/Admin_Profile';">
 			
@@ -105,11 +123,46 @@
 
 
 	var school=document.getElementById('School');
+	var code=document.getElementById('School_Code');
+	var city_list=document.getElementById('City_List');
+	var city=document.getElementById('city');
+	
+	var state=document.getElementById('state');
+	
+	function requestCities()
+	{
+		var xhr=new XMLHttpRequest();
+		xhr.open('Post','/getCities');
+		xhr.setRequestHeader('Content-Type','application/json');
+		xhr.send(JSON.stringify({
+			state:state.value
+		}));
+		xhr.onload=function()
+		{
+			var data=xhr.responseText;
+			if(data=='err')
+			{
+				alert('err');
+				location.href='/Admin_Profile';
+			}
+			else
+			{
+				var cities=JSON.parse(data);
+				city_list.innerHTML='';
+				cities.forEach(function(item){
+					city_list.innerHTML+='<option value='+item+'>'+item+'</option>'
+				});
+			}
+		}
+	}
 	
 	function load()
 	{
 		school.value='';
+		code.value='';
 		school.focus();
+		
+		requestCities();
 	}
 	
 	function subForm()
@@ -120,7 +173,10 @@
 		xhr.open('Post','/Add_School');
 		xhr.setRequestHeader('Content-Type',"application/json");
 		xhr.send(JSON.stringify({
-			School_Name:school.value
+			School_Name:school.value,
+			School_code:code.value,
+			state:state.value,
+			city:city.value
 		}));
 		xhr.onload=function(){
 			var data=xhr.responseText;
@@ -130,12 +186,38 @@
 				
 				load();
 			}
-			else
+			else if(data=='err')
 			{
 				alert('Error');
-				location.reload();
+				location.href='/Admin_Profile';
+			}
+			else if(data=="You Can't do this")
+			{
+				alert('Session Ended Login Again');
+				location.href='/';
+			}
+			else
+			{
+				alert('code '+code.value+' is Already Used for '+data);
 			}
 		}
+	}
+	
+	function checkNum(num)
+	{
+		//var num=document.getElementById('admNum')
+	
+		//console.log(num.value);
+		var str=num.value;
+		var temp='';
+		for(let i=0;i<str.length;i++)
+		{
+			if(num.id=='conNum' && i==10)
+				break;
+			if(str[i]>='0'&&str[i]<='9')
+				temp+=str[i];
+		}
+		num.value=temp;
 	}
 	
 	document.getElementsByClassName('anc')[1].classList.add('active');

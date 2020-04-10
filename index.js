@@ -179,8 +179,10 @@ var schoolSchema = Schema({
 	
 	name: String,
 	code: String,
+	state : String,
+	city : String,
 	added_by : String,
-	status : String
+	status : String,
 	
 	
 });
@@ -603,7 +605,7 @@ app.post('/Add_Student',function(req,res){
 				throw err;
 			else
 			{
-				if(data.length!=0)
+				if(data!=null)
 					res.send('Already Registered');
 				else
 				{
@@ -638,10 +640,71 @@ app.get('/addSchool',function(req,res){
 	
 	if(req.session.isAdminLogin==1)
 	{
-		res.render('\Add_School',{role:req.session.role});
+		statedetails.find({},{state:1})
+		.exec(function(err,data){
+			
+			if(err)
+				throw err;
+			else
+			{
+				
+				//console.log(data);
+				
+				data.sort(function(a,b){
+					
+					var state1=a.state.toLowerCase();
+					var state2=b.state.toLowerCase();
+					if(state1<state2)
+						return -1;
+					if(state1>state2)
+						return 1;
+					return 0;
+				});
+				
+				res.render('\Add_School',{states:data,role:req.session.role});
+			}
+			
+		});
 	}
 	else
 		res.redirect('/');
+	
+});
+
+app.post('/getCities',function(req,res){
+	
+	var body=req.body;
+	var state=body.state;
+	statedetails.find({state:state},{cities:1})
+	.exec(function(err,data){
+		
+		if(err)
+		{
+			throw err;
+			res.send('err');
+		}
+		else
+		{
+			
+			var cities=data[0].cities;
+			//console.log(data);
+			
+			cities.sort(function(a,b)
+			{
+				a=a.toLowerCase();
+				b=b.toLowerCase();
+				if(a<b)
+					return -1;
+				if(a>b)
+					return 1;
+				return 0;
+			});
+			//console.log(cities);
+			
+			res.send(cities);
+		}
+		
+	});
 	
 });
 
@@ -651,22 +714,13 @@ app.post('/Add_School',function(req,res){
 	{
 	
 		var body=req.body;
-		console.log(body);
+		//console.log(body);
 		var name = body.School_Name;
+		var code=body.School_code;
+		var state=body.state;
+		var city=body.city;
 		
-		/*var newUserDetails=new userdetails({
-						name:name,
-						email:email,
-						salt:salt,
-						password:password,
-						verifiedOTP : '0'
-					});
-					
-					newUserDetails.save()
-					.then(savedData =>{
-						toReturn+='Registration Successful';
-					})*/
-		schooldetails.find({})
+		schooldetails.findOne({code:code},{name:1})
 		.exec(function(err,data){
 			
 			if(err)
@@ -675,29 +729,33 @@ app.post('/Add_School',function(req,res){
 				res.send('err');
 			}
 			else
-			{
-				//console.log(data.length);
-					var t=data.length+1;
-					t=t.toString();
-					t=addZeros(t);
-					//console.log(t);
-					var code=t;
-					
+			{		
+				if(data!=null)
+				{
+					//console.log(data)
+					console.log('Code Already Used');
+					res.send(data.name);
+				}
+				else
+				{
 					var newSchoolDetails = new schooldetails({
 						name : name,
 						code : code,
+						state:state,
+						city:city,
 						added_by: req.session.adminEmail,
 						status : 'Active'
 					});
 					
 					newSchoolDetails.save()
+					.then(savedData=>{
+						console.log('School Added')
+						res.send('Done');
+					})
+				}
 			}
 			
 		});
-		
-		
-		
-		res.send('Done');
 	}
 	else
 		res.send("You Can't do this");

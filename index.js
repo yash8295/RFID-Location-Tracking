@@ -208,12 +208,22 @@ var stateSchema = Schema({
 	cities : [String]
 });
 
+var logSchema = Schema({
+	
+	email : String,
+	log : [{
+		time : Date,
+		action : String
+		}]
+});
+
 var userdetails = mongoose.model('userDetails',userSchema,'usersdetails');
 var otpdetails = mongoose.model('otpDetails',otpSchema,'otpdetails');
 var admindetails = mongoose.model('adminDetails',adminSchema,'admindetails');
 var schooldetails = mongoose.model('schoolDetails',schoolSchema,'schooldetails');
 var studentdetails = mongoose.model('studentDetails',studentSchema,'studentdetails');
 var statedetails = mongoose.model('stateDetails',stateSchema,'statedetails');
+var logdetails = mongoose.model('logDetails',logSchema,'logdetails');
 
 //------------------------------------//
 
@@ -335,7 +345,21 @@ app.post('/registerAdmin',function(req,res){
 					
 					newAdminDetails.save()
 					.then(savedData=>{
-						res.send('Admin Registered Successfully');
+						
+						var newLogDetails = new logdetails({
+							email : email,
+							log : [{
+								time : new Date(),
+								action : 'Admin Registered'
+							}]
+						});
+						
+						newLogDetails.save()
+						.then(temp=>{
+							
+							res.send('Admin Registered Successfully');
+							
+						});
 					})
 					
 				}

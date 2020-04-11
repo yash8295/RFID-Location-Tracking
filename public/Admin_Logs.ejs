@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title><Our Name></title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+
+<style>
+	*{
+	box-sizing: border-box;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 14px;
+	}
+	
+	#pmain{
+		position: fixed;
+		left:50px;
+		right:0;
+		top:60px;
+		bottom:0;
+		margin: auto;
+		overflow: auto;
+	}
+	*{
+	box-sizing: border-box;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 14px;
+	}
+	
+	#pmain{
+		position: absolute;
+		left:50px;
+		right:0;
+		top:60px;
+		bottom:0;
+		margin: auto;
+		overflow: auto;
+	}
+	
+	#main
+	{
+		position : absolute;
+		left:40vw;
+		top:1vw;
+	}
+	
+	.info
+	{
+		display: block;
+		height: 34px;
+		width: 100%;
+		outline: 0;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+		background-color: #fff;	
+		color: black;
+		padding: 6px 12px;
+		font-size: 14px;
+	}
+	#input1
+	{
+		border: 0;
+		height: 30px;
+		width: 47%;
+		background-color: #5cb85c;
+		color: white;
+		font-size: 14px;
+	}
+	#input2{
+		border: 0;
+		height: 30px;
+		width: 45%;
+		background-color: #d9534f;
+		color: white;
+		font-size: 14px;
+	}
+	#logdiv
+	{
+		position:absolute;
+		left:30vw;
+		top:5vw;
+	}
+	#logs
+	{
+		background-color:white
+	}
+	table {
+	  font-family: arial, sans-serif;
+	  border-collapse: collapse;
+	  width: 100%;
+	}
+
+	td, th ,th{
+	  border: 1px solid #dddddd;
+	  text-align: left;
+	  padding: 8px;
+	}
+
+	tr:nth-child(even) {
+	  background-color: #dddddd;
+	}
+</style>
+
+<body >
+<% if(role =='SuperAdmin'){ %>
+<%	include Home %>
+<% } else { %>
+<script>
+	location.href='/Admin_Profile';
+</script>
+<% } %>
+
+<div id="pmain" style='left:50px'>
+	<div id="main">	
+		<div class='info'>
+			Admin : <%= email %>
+			<br/><br/>
+		</div>
+	</div>
+	<div id='logdiv'>
+		<table id='logs' border='1'>					
+				<th><center>Date/Time</center></th>
+				<th><center>Actions</center></th>
+		</table>
+	</div>
+	<br/><br/><br/><br/><br/>
+</div>
+
+</body>
+<script>
+	
+	
+	var table=document.getElementById('logs');
+	var email='<%= email %>'
+	var xhr=new XMLHttpRequest();
+	xhr.open('post','/getLogData');
+	xhr.setRequestHeader('Content-Type','application/json');
+	xhr.send();
+	
+	console.log(table);
+	
+	xhr.onload=function(){
+		var data = JSON.parse(xhr.responseText);
+		var log=data.log;
+		console.log(log);
+		
+		log.forEach(function(item){
+		
+			item.time=new Date(item.time);
+			console.log(item.time);
+			var time=item.time.getDate()+'/'+parseInt(item.time.getMonth()+1)+'/'+item.time.getFullYear()+' '+item.time.getHours()+':'+item.time.getMinutes()+':'+item.time.getSeconds();
+			
+			table.innerHTML+='<tr><td >'+ time +'</td><td>'+ item.action +'</td></tr>';
+		
+		})
+		
+		
+	}
+	
+	document.getElementsByClassName('anc')[3].classList.add('active');
+	document.getElementsByClassName('fa-cog')[0].classList.add('act');
+
+</script>
+</html>

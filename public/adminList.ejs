@@ -104,12 +104,10 @@
 <body>
 <% if(role =='SuperAdmin'){ %>
 <%	include Home %>
-<% } %>
-<% if(role =='SAdmin'){ %>
-<%	include Home1 %>
-<% } %>
-<% if(role =='Admin'){ %>
-<%	include Home2 %>
+<% } else { %>
+<script>
+	location.href='/Admin_Profile';
+</script>
 <% } %>
 
 <div id="pmain" >
@@ -172,7 +170,7 @@ $(document).ready(function(){
 				"data": null,
 				render: function(data,type,row){
 					if(data.role=="SuperAdmin")
-						return '<center><a class="actionbtns" style="background-color:#000000;" onclick="openMail(this)"><span class="fa fa-envelope" style="color:white;font-size:12px;"></span></a></center>'
+						var x='<center><a class="actionbtns" style="background-color:#000000;" onclick="openMail(this)"><span class="fa fa-envelope" style="color:white;font-size:12px;"></span></a>'
 					else
 					{
 					//console.log(data);
@@ -180,9 +178,10 @@ $(document).ready(function(){
 						if(data.status=='Inactive')
 							x=x+'<a class="actionbtns" style="background-color:#F0AD4E;" onclick="deAct(this)"><span class="fa fa-times-circle" style="color:white;font-size:12px;"></span></a></center>'
 						else
-							x=x+'<a class="actionbtns" style="background-color:#5CB85C;" onclick="deAct(this)"><span class="fa fa-check-circle" style="color:white;font-size:12px;"></span></a></center>'
-						return x;
+							x=x+'<a class="actionbtns" style="background-color:#5CB85C;" onclick="deAct(this)"><span class="fa fa-check-circle" style="color:white;font-size:12px;"></span></a>'
 					}
+					x+='<a class="actionbtns" style="background-color:red;" onclick="log(this)"><i class="fa fa-cog" style="color:white;font-size:12px" aria-hidden="true"></i></a></center>'
+					return x
 				}
 			}
 		],
@@ -204,6 +203,24 @@ $('#statusFilter').on('change',function(){
 var toUpdateUser;
 document.getElementsByClassName('anc')[2].classList.add('active');
 document.getElementsByClassName('fa-list-ul')[0].classList.add('act');
+
+function log(elem)
+{
+
+	var row = elem.parentNode.parentNode.parentNode;
+	var email=row.childNodes[0].innerHTML;
+	
+	
+	var xhr=new XMLHttpRequest();
+	xhr.open('post','/setLog');
+	xhr.setRequestHeader('Content-Type','application/json');
+	xhr.send(JSON.stringify({
+		email:email
+	}));
+	
+	location.href='/logs';
+}
+
 function refresh()
 {
 	location.reload();

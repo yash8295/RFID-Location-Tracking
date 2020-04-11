@@ -8,6 +8,7 @@ var nodemailer=require('nodemailer');
 var session = require('express-session');
 var path=require('path');
 var ejs = require('ejs');
+const axios = require('axios');
 //var mongoDB = 'mongodb://localhost:27017'; //27017 is default port
 var mongoDB="mongodb+srv://Yash:4gsYRxEVyEYzabc4@cluster0-wynku.mongodb.net/RFID_Demo?retryWrites=true&w=majority";
 /*
@@ -115,6 +116,13 @@ function addZeros(str)
 		temp+=str[i];
 	console.log(temp);
 	return temp;
+}
+
+function getIST()
+{
+	var indiaTime = new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"});
+	var time = new Date(indiaTime);
+	return time;
 }
 
 //Create Express Service
@@ -236,7 +244,9 @@ app.get(['/',''],function(req,res){
 			res.redirect('/Admin_Profile');
 	}
 	else
+	{
 		res.sendFile('/index.html');
+	}
 	
 });
 
@@ -244,7 +254,8 @@ app.post('/loginAdmin',function(req,res){
 	
 	var body = req.body;
 	var email = body.email;
-	var userPassword = body.password;
+	var userPassword = body.password;	
+	
 	
 	admindetails.find({email:email,status:'Active'}).exec(function(err,data){
 		if(err)
@@ -269,9 +280,23 @@ app.post('/loginAdmin',function(req,res){
 					req.session.pic_id=data[0].pic_id;
 					
 					//console.log(req.session);
+					var time=getIST();
 					
-					console.log('Login Successful');
-					res.send('/Admin_Profile');
+					var log={
+							time:time,
+							action : 'Logged In'
+						}
+						console.log(log);
+					
+					logdetails.updateOne({email:email},{$push:{log:log}})
+					.then(savedData=>{
+						
+						console.log(savedData);
+						
+						console.log('Login Successful');
+						res.send('/Admin_Profile');
+						
+					});
 				}
 				else
 				{
@@ -346,10 +371,12 @@ app.post('/registerAdmin',function(req,res){
 					newAdminDetails.save()
 					.then(savedData=>{
 						
+						var time=getIST();
+						
 						var newLogDetails = new logdetails({
 							email : email,
 							log : [{
-								time : new Date(),
+								time : time,
 								action : 'Admin Registered'
 							}]
 						});
@@ -357,7 +384,18 @@ app.post('/registerAdmin',function(req,res){
 						newLogDetails.save()
 						.then(temp=>{
 							
-							res.send('Admin Registered Successfully');
+							var log={
+								time:time,
+								action : 'Added Admin '+name
+							}
+							
+							logdetails.updateOne({email:req.session.adminEmail},{$push:{log:log}})
+							.then(savedData=>{
+								
+								console.log(savedData);
+								res.send('Admin Registered Successfully');
+								
+							});
 							
 						});
 					})
@@ -373,7 +411,7 @@ app.post('/registerAdmin',function(req,res){
 
 app.get('/Admin_Profile',function(req,res){
 	
-	console.log(req.session);
+	//console.log(req.session);
 	
 	
 	if(req.session.isAdminLogin==1)
@@ -409,7 +447,7 @@ app.post('/getAdmins',function(req,res){
 	
 	if(req.session.role=='SuperAdmin')
 	{
-		admindetails.find()
+		admindetails.find({},{email:1})
 		.exec(function(err,data)
 		{
 			console.log(data);
@@ -492,6 +530,7 @@ app.get('/SwitchAdmin',function(req,res){
 	
 	if(req.session.isAdminLogin==1)
 	{
+		var first = req.session.role;
 		if(req.session.role=='SuperAdmin')
 		{
 			req.session.role='SAdmin';
@@ -500,7 +539,19 @@ app.get('/SwitchAdmin',function(req,res){
 		{
 			req.session.role='SuperAdmin';
 		}
-		res.redirect('/Admin_Profile');
+		var second = req.session.role;
+		
+		var action='Switched From '+first+' to '+second;
+		
+		var log={
+			time:getIST(),
+			action:action
+		}
+		
+		logdetails.updateOne({email:req.session.adminEmail},{$push:{log:log}})
+		.then(savedData=>{
+			res.redirect('/Admin_Profile');
+		})
 	}
 	
 });
@@ -549,8 +600,17 @@ app.put('/changePass',function(req,res){
 				.exec(function(err,data){
 					if(err)
 						throw err;
-					console.log(data);
-					res.send('Password Changed');
+					
+					var log=
+					{
+						time:getIST(),
+						action:'Changed Password'
+					}
+					
+					logdetails.updateOne({email:req.session.adminEmail},{$push:{log:log}})
+					.then(savedData=>{
+						res.send('Password Changed');
+					})
 				});
 			}
 			else
@@ -638,7 +698,19 @@ app.post('/Add_Student',function(req,res){
 					
 					newStudentDetails.save()
 					.then(savedData=>{
-						res.send('Done');
+						
+						var action='Added Student school_code : '+school_code+', admission_no : '+admission_no;
+						
+						var log={
+							time:getIST(),
+							action:action
+						}
+						logdetails.updateOne({email:req.session.adminEmail},{$push:{log:log}})
+						.then(savedData=>{
+							console.log('Student Added');
+							res.send('Done');
+						})
+						
 					});
 				}
 			}
@@ -764,8 +836,22 @@ app.post('/Add_School',function(req,res){
 					
 					newSchoolDetails.save()
 					.then(savedData=>{
-						console.log('School Added')
-						res.send('Done');
+						
+						var action='Added School '+code;
+						
+						var log={
+							time:getIST(),
+							action:action
+						}
+						
+						logdetails.updateOne({email:req.session.adminEmail},{$push:{log:log}})
+						.then(savedData=>{
+							
+							console.log('School Added')
+							res.send('Done');
+							
+						})
+						
 					})
 				}
 			}
@@ -918,6 +1004,53 @@ app.post('/getStudentData',function(req,res){
 	
 });
 
+app.post('/setLog',function(req,res){
+	
+	
+	req.session.log=req.body.email;
+	
+	res.send('Done');
+	
+});
+
+app.get('/logs',function(req,res){
+	
+	console.log(req.session.log);
+	
+	if(req.session.isAdminLogin==1)
+	{
+		if(req.session.role=='SuperAdmin')
+		{
+			if(req.session.log!=undefined)
+			{
+						res.render('\Admin_Logs',{role:req.session.role,email:req.session.log});
+			}
+			else
+				res.redirect('/adminList');
+		}
+		else
+			res.redirect('/Admin_Profile');
+	}
+	else
+		res.redirect('/');
+	
+});
+
+app.post('/getLogData',function(req,res){
+	
+	
+	logdetails.findOne({email:req.session.log},{log:1})
+	.exec(function(err,data){
+		
+		if(err)
+			throw err;
+		//console.log(data);
+		res.send(data);
+		
+	});
+	
+});
+
 
 app.put('/activation',function(req,res){
 	
@@ -925,18 +1058,42 @@ app.put('/activation',function(req,res){
 	{
 		var body=req.body;
 		var purpose=body.purpose.toLowerCase();
-		console.log(body);
+		var status=body.status;
+		if(status=='Active')
+			var actiontemp='Activated';
+		else
+			var actiontemp='Deactivated';
 		
 		if(purpose=='admin')
 		{
-			console.log(body);
+			//console.log(body);
 			var email = body.email;
-			var status=body.status;
 				admindetails.updateOne({email:email},{$set:{status:status}})
 				.exec(function(err,data){
 					if(err)
 						throw err;
-					console.log(email+' is now '+status);
+					
+					var action=actiontemp+' by '+req.session.adminEmail;
+					
+					var log=
+					{
+						time:getIST(),
+						action:action
+					}
+					
+					logdetails.updateOne({email:email},{$push:{log}})
+					.then(savedData=>{
+						
+						log.action=actiontemp+' Admin '+email;
+						
+						logdetails.updateOne({email:req.session.adminEmail},{$push:{log:log}})
+						.then(temp=>{
+						
+							console.log(email+' is now '+status);
+							
+						})
+						
+					})
 				});
 		}
 		else if(purpose=='school')
@@ -950,7 +1107,20 @@ app.put('/activation',function(req,res){
 				if(err)
 					throw err;
 				else
-					console.log(code+' is now '+status);
+				{
+					var action = actiontemp+' School '+code;
+					
+					var log=
+					{
+						time:getIST(),
+						action:action
+					}
+					
+					logdetails.updateOne({email:req.session.adminEmail},{$push:{log}})
+					.then(savedData=>{
+						console.log(code+' is now '+status);
+					})
+				}
 			});
 		}
 		else if(purpose=='student')
@@ -965,7 +1135,21 @@ app.put('/activation',function(req,res){
 				if(err)
 					throw err;
 				else
-					console.log(school_code+' '+admission_no+' is now '+status);
+				{
+					var action = actiontemp+' Student school_code :'+school_code+', admission_no :'+admission_no;
+					
+					var log=
+					{
+						time:getIST(),
+						action:action
+					}
+					
+					logdetails.updateOne({email:req.session.adminEmail},{$push:{log}})
+					.then(savedData=>{
+						console.log(school_code+' '+admission_no+' is now '+status);
+					})
+					
+				}
 				
 			});
 		}
@@ -990,10 +1174,17 @@ app.post('/adminLogout',function(req,res){
 	req.session.role='';
 	req.session.pic_id='';*/
 	
-	req.session.destroy();
+	var log={
+		time:getIST(),
+		action:'Logged Out'
+	}
 	
-	console.log('Logout');
-	console.log(req.session);
+	logdetails.updateOne({email:req.session.adminEmail},{$push:{log:log}})
+	.then(saveData=>{	
+		req.session.destroy();	
+		console.log('Logout');
+		//console.log(req.session);
+	})
 	
 });
 
@@ -1284,7 +1475,7 @@ app.post('/Add_City',function(req,res){
 	var state=body.state;
 	var city=body.city;
 	var flag=0;
-	console.log(body);
+	//console.log(body);
 	
 	statedetails.findOne({state:state})
 	.exec(function(err,data){
@@ -1294,7 +1485,7 @@ app.post('/Add_City',function(req,res){
 		else
 		{
 			var cities=data.cities;
-			console.log(cities);
+			//console.log(cities);
 			cities.forEach((item)=>{
 				
 				if(item.toLowerCase()==city.toLowerCase()&&flag==0)
@@ -1318,7 +1509,7 @@ app.post('/Add_City',function(req,res){
 					}
 				})
 			}
-			console.log(cities);
+			//console.log(cities);
 		}
 		
 	});
@@ -1355,7 +1546,23 @@ app.post('/Add_City',function(req,res){
 		}
 	});
 });
+
 */
+
+/*app.post('/getTime',function(req,res){
+	
+	logdetails.find({email:'test@gmail.com'})
+	.exec(function(err,data){
+		
+		console.log(data);
+		var log=data[0].log;
+		var time=log[0].time;
+		console.log(time.getHours());
+		res.send('done');
+		
+	});
+	
+});*/
 
 //-------------------------------------------------//
 

@@ -124,12 +124,10 @@
 <body onload="getUsers()">
 <% if(role =='SuperAdmin'){ %>
 <%	include Home %>
-<% } %>
-<% if(role =='SAdmin'){ %>
-<%	include Home1 %>
-<% } %>
-<% if(role =='Admin'){ %>
-<%	include Home2 %>
+<% } else { %>
+<script>
+	location.href='/Admin_Profile';
+</script>
 <% } %>
 <div id="pmain">
 <div class="alertua" id="alertdiv">
@@ -213,6 +211,7 @@ function getUsers()
 	request.send();
 	request.onload=function(){
 		users=JSON.parse(request.responseText);
+		console.log(users);
 	}
 }
 function displayCheck()

@@ -386,7 +386,7 @@ app.post('/registerAdmin',function(req,res){
 							
 							var log={
 								time:time,
-								action : 'Added Admin '+name
+								action : 'Added Admin '+email
 							}
 							
 							logdetails.updateOne({email:req.session.adminEmail},{$push:{log:log}})
@@ -1050,6 +1050,149 @@ app.post('/getLogData',function(req,res){
 	});
 	
 });
+
+app.get('/Serach_Logs',function(req,res){
+	
+	if(req.session.isAdminLogin==1)
+	{
+		res.render('\Search_Logs',{role:req.session.role});
+	}
+	else
+		res.redirect('/');
+	
+});
+
+app.post('/findLogs',function(req,res){
+	
+	var subject=req.body.subject;
+	
+	if(subject=='Admin')
+	{
+		admindetails.find({},{email:1})
+		.exec(function(err,data){
+			
+			if(err)
+			{
+				throw err;
+				res.send('err');
+			}
+			else
+				res.send(data);
+			
+		})
+	}
+	else if(subject=='School')
+	{
+		schooldetails.find({},{code:1})
+		.exec(function(err,data){
+			
+			if(err)
+			{
+				throw err;
+				res.send('err');
+			}
+			else
+				res.send(data);
+			
+		});
+	}
+	else if(subject=='Student')
+	{
+		studentdetails.find({},{school_code:1})
+		.exec(function(err,data){
+			
+			if(err)
+			{
+				throw err;
+				res.send('err');
+			}
+			else
+			{
+				//console.log(data);
+				res.send(data);
+			}
+			
+		})
+	}
+	else
+		res.send('err');
+});
+
+app.post('/findLogData',function(req,res){
+	
+	var body=req.body;
+	if(body.subject=='Student')
+	{
+		var school_code=body.target.school_code;
+		var admission_no=body.target.admission_no;
+		
+		var find=body.action+' '+body.subject+' school_code :'+school_code+', admission_no :'+admission_no;
+		//console.log(find);
+	}
+	else
+	{
+		
+		var find=body.action+' '+body.subject+' '+body.target;
+		//console.log(find);
+
+	}
+	console.log(find);
+	logdetails.aggregate([{$project:{
+			log:{$filter:{
+				input:"$log",
+				as:"item",
+				cond:{$eq:["$$item.action",find]}
+			}},
+			email:1
+		}}
+	])
+	.exec(function(err,data){
+		
+		if(err)
+		{
+			throw err;
+			res.send('err');
+		}
+		else
+		{
+			console.log(data);
+			var temp=[];
+			let i=0;
+			data.forEach(function(item){
+				if(item.log.length>0)
+				{
+					console.log(i);
+					temp.push(item);
+				}
+				i++;
+			})
+			//console.log(temp);
+			res.send(temp);
+		}
+		
+	});
+})
+
+app.post('/getStudentAdm',function(req,res){
+	
+	var body=req.body;
+	var school_code=body.school_code;
+	
+	studentdetails.find({school_code:school_code},{admission_no:1})
+	.exec(function(err,data){
+		
+		if(err)
+		{
+			throw err;
+			res.send('err');
+		}
+		else
+		{
+			res.send(data);
+		}			
+	});
+	
+})
 
 
 app.put('/activation',function(req,res){

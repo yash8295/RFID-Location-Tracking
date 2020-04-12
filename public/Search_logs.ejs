@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title><Our Name></title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+
+<style>
+	*{
+	box-sizing: border-box;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 14px;
+	}
+	
+	#pmain{
+		position: fixed;
+		left:50px;
+		right:0;
+		top:60px;
+		bottom:0;
+		margin: auto;
+		overflow: auto;
+	}
+	*{
+	box-sizing: border-box;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 14px;
+	}
+	
+	#pmain{
+		position: absolute;
+		left:50px;
+		right:0;
+		top:60px;
+		bottom:0;
+		margin: auto;
+		overflow: auto;
+	}
+	
+	#main
+	{
+		position : absolute;
+		left:40vw;
+		top:1vw;
+	}
+	
+	.info
+	{
+		display: block;
+		height: 34px;
+		width: 100%;
+		outline: 0;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+		background-color: #fff;	
+		color: black;
+		padding: 6px 12px;
+		font-size: 14px;
+	}
+	#input1
+	{
+		border: 0;
+		height: 30px;
+		width: 47%;
+		background-color: #5cb85c;
+		color: white;
+		font-size: 14px;
+	}
+	#input2{
+		border: 0;
+		height: 30px;
+		width: 45%;
+		background-color: #d9534f;
+		color: white;
+		font-size: 14px;
+	}
+	#logdiv
+	{
+		position:absolute;
+		left:30vw;
+		top:25vw;
+	}
+	#logs
+	{
+		background-color:white
+	}
+	table {
+	  font-family: arial, sans-serif;
+	  border-collapse: collapse;
+	  width: 100%;
+	}
+
+	td, th ,th{
+	  border: 1px solid #dddddd;
+	  text-align: left;
+	  padding: 8px;
+	}
+
+	tr:nth-child(even) {
+	  background-color: #dddddd;
+	}
+</style>
+
+<body onload=change()>
+<% if(role =='SuperAdmin'){ %>
+<%	include Home %>
+<% } else { %>
+<script>
+	location.href='/Admin_Profile';
+</script>
+<% } %>
+
+<div id="pmain" style='left:50px'>
+	<div id="main">	
+		<form onsubmit=subForm() id='logForm'>
+			Action:
+			<select id='Action' class='info'>
+				<optgroup label='Select Action'>
+					<option value='Activated'>Activated</option>
+					<option value='Deactivated'>Deactivated</option>
+					<option value='Added'>Added</option>
+				</optgroup>
+			</select>
+			<br/><br/>
+			Subject:
+			<select id='Subject' class='info' onchange='change()'>
+				<optgroup label='Select Subject'>
+					<option value='Admin'>Admin</option>
+					<option value='School'>School</option>
+					<option value='Student'>Student</option>
+				</optgroup>
+			</select>
+			<br/><br/>
+			Target:
+			<select id='Target' class='info' onchange='getDetails()'>
+				<optgroup label='Select Target' id='targetOptions' class='info'>
+				</optgroup>
+			</select>
+			<br/><br/>
+			<select class='info' id='stuhidden' style='visibility:hidden;'>
+				<optgroup label='Select Admission Number' id='studentTarget'>
+				</optgroup>
+			</select>
+			<br/><br/>
+			<input id='input1' type='submit' value='Find'>
+			<input id='input2' type='button' value='Cancel' onclick="location.href='/Admin_Profile';">
+		</form>
+	</div>
+	<br/><br/><br/><br/><br/>
+	<div id='logdiv'>
+		<table id='logs' border='1'>					
+		</table>
+	</div>
+</div>
+
+</body>
+<script>
+	
+	var action=document.getElementById('Action');
+	var subject=document.getElementById('Subject');
+	var target=document.getElementById('targetOptions');
+	var hide=document.getElementById('stuhidden');
+	var adm_no=document.getElementById('studentTarget');
+	
+	function removeDuplicates(array) {
+	  return array.filter((a, b) => array.indexOf(a) === b)
+	};
+	
+	function change()
+	{
+		if(subject.value=='Admin')
+		{
+			var json={
+				subject:'Admin'
+			};
+		}
+		else if(subject.value=='School')
+		{
+			var json={
+				subject:'School'
+			};
+		}
+		else if(subject.value='Student')
+		{
+			var json={
+				subject:'Student'
+			};
+		}
+		
+		var xhr=new XMLHttpRequest();
+		xhr.open('post','/findLogs');
+		xhr.setRequestHeader('Content-Type','application/json');
+		xhr.send(JSON.stringify(json));
+		
+		xhr.onload=function()
+		{
+			var data=xhr.responseText;
+			if(data=='err')
+			{
+				alert('Error');
+				location.href='/Admin_Profile';
+			}
+			data=JSON.parse(data);
+			
+			if(subject.value=='Student')
+			{
+				target.innerHTML='';
+				adm_no.innerHTML='';
+				target.label='Select School Code'
+				
+				console.log(data);
+				
+				var temp=[]
+				data.forEach(function(item){
+					temp.push(item.school_code);
+				})
+				
+				temp=removeDuplicates(temp);
+				
+				data=temp;
+				
+				data.forEach(function(item){
+					target.innerHTML+='<option value = '+item+'>'+item+'</option>';
+				})
+				getDetails();
+				
+			}
+			else
+			{
+				target.label='Select Target';
+				var targetData=[];
+				hide.style.visibility='hidden';
+				
+				if(subject.value=='Admin')
+				{
+					data.forEach(function(item){
+						targetData.push(item.email);
+					})
+				}
+				else
+				{
+					data.forEach(function(item){
+						targetData.push(item.code);
+					})
+				}
+				//console.log(targetData);
+				
+				target.innerHTML='';				
+				targetData.forEach(function(item){
+					target.innerHTML+='<option value = '+item+'>'+item+'</option>';
+				})
+			}
+			
+		}
+	}
+	
+	function getDetails()
+	{
+		if(subject.value=='Student')
+		{
+			var target=document.getElementById('Target');
+			var xhr=new XMLHttpRequest();
+			xhr.open('post','/getStudentAdm');
+			xhr.setRequestHeader('Content-Type','application/json');
+			console.log(target);
+			xhr.send(JSON.stringify({school_code:target.value}));
+			
+			xhr.onload=function(){
+			
+				var data=xhr.responseText;
+				if(data=='err')
+				{
+					alert('err');
+					location.href='/Admin_Profile';
+				}
+				data=JSON.parse(data);
+				console.log(data);
+				
+				hide.style.visibility='visible';
+				adm_no.innerHTML='';
+				
+				data.forEach(function(item){
+					
+					adm_no.innerHTML+='<option value='+item.admission_no+'>'+item.admission_no+'</option>';
+					
+				})
+				
+			
+			}
+		}
+	}
+	
+	var log=document.getElementById('logs');
+	
+	function subForm()
+	{
+		
+		var target=document.getElementById('Target');
+		log.innerHTML='';
+	
+		event.preventDefault();
+		if(subject.value=='Student')
+		{
+			var json={
+				action:action.value,
+				subject:subject.value,
+				target:{
+					school_code:target.value,
+					admission_no:hide.value
+				}
+			}
+			console.log(json);
+		}
+		else
+		{
+			var json={
+				action:action.value,
+				subject:subject.value,
+				target:target.value
+			}
+			//console.log(json);
+		}
+		
+		var xhr=new XMLHttpRequest();
+		xhr.open('post','/findLogData');
+		xhr.setRequestHeader('Content-Type','application/json');
+		xhr.send(JSON.stringify(json));
+		
+		xhr.onload=function(){
+			
+			var data=xhr.responseText;
+			if(data=='err')
+			{
+				alert('Error');
+			}
+			
+			data=JSON.parse(data);
+			
+			if(data.length==0)
+			{
+				alert('No Logs');
+			}
+			else
+				logs.innerHTML='<th><center>Date/Time</center></th><th><center>Email</center></th><th><center>Action</center></th>';
+				
+			var logData=[];
+			var temp={
+				email:'',
+				time:'',
+				action:''
+			}
+			
+			var t;
+			//console.log(data);
+			
+			for(let i=0;i<data.length;i++)
+			{
+				for(let j=0;j<data[i].log.length;j++)
+				{
+					temp={
+						email:data[i].email,
+						time:new Date(data[i].log[j].time),
+						action:data[i].log[j].action
+					}
+					
+					logData.push(temp);
+					//console.log(data[i].log[j].time);
+				}
+			}
+			
+			
+			logData.sort(function(a,b){
+				if(a.time>b.time)
+					return 1;
+				if(a.time<b.time)
+					return -1;
+				return 0;
+			})
+			
+			
+			logData.forEach(function(item){
+				
+				var time=item.time.getDate()+'/'+parseInt(item.time.getMonth()+1)+'/'+item.time.getFullYear()+' '+item.time.getHours()+':'+item.time.getMinutes()+':'+item.time.getSeconds();
+				
+				log.innerHTML+='<tr><td>'+time+'</td><td>'+item.email+'</td><td>'+item.action+'</td></tr>';
+			
+			})
+			
+			
+			
+			
+		}
+	}
+	
+	document.getElementsByClassName('anc')[4].classList.add('active');
+	document.getElementsByClassName('fa-cog')[1].classList.add('act');
+
+</script>
+</html>

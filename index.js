@@ -1055,7 +1055,7 @@ app.get('/Serach_Logs',function(req,res){
 	
 	if(req.session.isAdminLogin==1)
 	{
-		res.render('\Search_Logs',{role:req.session.role});
+		res.render('\Search_logs',{role:req.session.role});
 	}
 	else
 		res.redirect('/');

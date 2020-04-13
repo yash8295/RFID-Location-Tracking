@@ -250,6 +250,15 @@ app.get(['/',''],function(req,res){
 	
 });
 
+app.post('/auth',function(req,res){
+	
+	if(req.session.isAdminLogin==1)
+		res.send('1');
+	else
+		res.send('0');
+	
+})
+
 app.post('/loginAdmin',function(req,res){
 	
 	var body = req.body;
@@ -286,12 +295,12 @@ app.post('/loginAdmin',function(req,res){
 							time:time,
 							action : 'Logged In'
 						}
-						console.log(log);
+						//console.log(log);
 					
 					logdetails.updateOne({email:email},{$push:{log:log}})
 					.then(savedData=>{
 						
-						console.log(savedData);
+						//console.log(savedData);
 						
 						console.log('Login Successful');
 						res.send('/Admin_Profile');
@@ -336,7 +345,7 @@ app.post('/registerAdmin',function(req,res){
 		
 		
 		//console.log(password,salt,checkHashPassword(plain_password,salt).passwordHash);
-		admindetails.find({email:email}).exec(function(err,data){
+		admindetails.find({email:email},{email:1}).exec(function(err,data){
 			if(err)
 				throw err;
 			else
@@ -416,7 +425,7 @@ app.get('/Admin_Profile',function(req,res){
 	
 	if(req.session.isAdminLogin==1)
 	{
-		admindetails.find({email:req.session.adminEmail}).exec(function(err,udata){
+		admindetails.find({email:req.session.adminEmail},{email:1,name:1,role:1,phoneno:1,gender:1}).exec(function(err,udata){
 			if(err)
 				throw err;
 			else
@@ -1015,7 +1024,7 @@ app.post('/setLog',function(req,res){
 
 app.get('/logs',function(req,res){
 	
-	console.log(req.session.log);
+	//console.log(req.session.log);
 	
 	if(req.session.isAdminLogin==1)
 	{
@@ -1407,141 +1416,7 @@ app.post('/registerUser',(req,res,next)=>{
 	
 //----------------------Login---------------------//		
 
-	app.post('/loginUser',(req,res,next)=>{
-		
-		var data=req.body;
-		
-		var email=data.email;
-		var userPassword=data.password;
-		
-		userdetails.find({email:email}).exec(function(err,updata){
-			if(err)
-				throw err;
-			if(updata.length==0)
-			{
-				res.json('No User Found');
-				console.log('No User Found');
-			}
-			else
-			{
-				var salt=updata[0].salt;
-				//console.log(salt);
-				//console.log(updata);
-				var encrypted_password=updata[0].password;
-				var hashed_password=checkHashPassword(userPassword,salt).passwordHash;
-				//var hashed_password=encrypted_password
-				if(hashed_password==encrypted_password)
-				{
-					req.session.isUserLogin=1;
-					req.session.userName=updata[0].name;
-					req.session.userEmail=email;
-					
-					
-					
-					res.json('Login Successful');
-					console.log('Login Successful');
-				}
-				else
-				{
-					res.json('No User Found');
-					console.log('No User Found');
-				}
-			}
-		});
-		
-		//Check Email Exists
-		/*userdetails
-		.find({'email':email}).count(function(err,number){
-			if(err)
-				console.log(err);
-			else if(number==0)
-			{
-				res.json('Email not exists');
-				console.log('Email not exists');
-			}
-			else
-			{
-				
-					userdetails
-					.findOne({'email':email},function(err,user){
-						var salt = user.salt;
-						var hashed_password = checkHashPassword(userPassword,salt).passwordHash;
-						var encrypted_password = user.password;
-						if(hashed_password==encrypted_password)
-						{
-							res.json('Login Successful');
-							console.log('Login Successful');
-						}
-						else
-						{
-							res.json('No User Found');
-							console.log('No User Found');
-						}
-					})
-			}
-		})*/
-		
-	});	
-		
-//-------------------------------------------//
 
-//------------------Log Out---------------------//
-
-app.post('/logout',function(req,res){
-
-		req.session.destroy();
-})
-
-//----------------------------------------------//
-
-//--------------------Check OTP---------------------
-
-app.post('/verifyOtp',function(req,res){
-	
-	var body=req.body;
-	var email=req.session.email;
-	var otp=body.otp;
-	
-	otpdetails.find({email:email,otp:otp})
-	.exec(function(err,data){
-		if(err)
-		{
-			console.log(err);
-			throw err;
-		}
-		else
-		{
-			if(data.length==0)
-			{
-				res.json('Wrong OTP');
-				console.log('Wrong OTP');
-			}
-			else
-			{
-				userdetails.updateOne({email:email},{$set:{verifiedOTP:'1'}})
-				.exec(function(err,data){
-					if(err)
-						throw err;
-					else
-					{
-						otpdetails.deleteOne({email:email})
-						.exec(function(err,data){
-							if(err)
-								throw err;
-							else
-							{
-								res.json('OTP Verified');
-								console.log('OTP Verified');
-							}
-						})
-						
-					}
-				})
-			}
-		}
-	})
-	
-});
 
 //--------------------------------------------//
 

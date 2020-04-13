@@ -26,7 +26,7 @@
 			}
 		</style>
 	</head>
-	<body class="row" onload=load()>
+	<body class="row" onload=load() id='body' style='visibility:hidden;'>
 	<div class='row col-sm-6 col-xs-12'>
 	<center style="width:100%">
 	<div class="col-sm-12 col-xs-10" >Log Into Your Account</div>
@@ -56,7 +56,21 @@
 		
 		function load()
 		{
-			document.getElementById('username').focus();
+			var xhr=new XMLHttpRequest();
+			xhr.open('Post','/auth');
+			xhr.send();
+			
+			xhr.onload=function()
+			{
+				var data=xhr.responseText;
+				if(data=='1')
+					location.href='/Admin_Profile';
+				else
+				{
+					document.getElementById('body').style.visibility='visible';
+					document.getElementById('username').focus();
+				}
+			}
 		}
 		
 		var log=document.getElementById('login');

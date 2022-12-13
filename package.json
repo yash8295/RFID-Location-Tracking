@@ -20,7 +20,7 @@
     "cors-anywhere": "^0.4.1",
     "crypto": "^1.0.1",
     "ejs": "^2.6.1",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "express-session": "^1.16.1",
     "heroku": "^7.38.1",
     "mongodb": "^3.5.5",
